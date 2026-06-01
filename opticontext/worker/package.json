@@ -1,0 +1,22 @@
+{
+  "name": "opticontext-worker",
+  "version": "1.0.0",
+  "description": "OptiContext MCP Server - Cloudflare Workers",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20250401.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.7",
+    "wrangler": "^4.0.0"
+  }
+}

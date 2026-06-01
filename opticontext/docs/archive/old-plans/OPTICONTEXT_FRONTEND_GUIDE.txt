@@ -1,0 +1,1383 @@
+OPTICONTEXT — FRONTEND BUILD GUIDE
+Version 1.0 · Sandy · May 2026
+================================================================================
+
+This document is the complete, authoritative frontend specification for OptiContext.
+It is written for execution, not exploration. Every decision here is final.
+
+Read it once fully before writing a single line of code.
+
+================================================================================
+PART 0 — GLOBAL DESIGN SYSTEM
+================================================================================
+
+The design language for OptiContext is called: Paper Precision.
+
+The idea is simple. A warm, editorial surface — like technical paper — combined
+with developer precision. Structured, serious, and exact. Nothing decorative that
+doesn't earn its place.
+
+This is not a startup template. This is infrastructure. The design should feel
+like a well-made instrument, not a landing page generator output.
+
+------------------------------------------------------------------------
+COLOR TOKENS
+------------------------------------------------------------------------
+
+Background base:       #FAF8F4   (warm ivory — primary surface)
+Background raised:     #F4F1EB   (slightly cooler paper — cards, panels)
+Background sunken:     #EFECE4   (wells, code blocks, inset areas)
+
+Text primary:          #1A1A18   (near-black graphite — headlines, body)
+Text secondary:        #4A4A45   (medium graphite — supporting text)
+Text muted:            #8A8A82   (light graphite — labels, metadata)
+Text inverse:          #FAF8F4   (for use on dark surfaces)
+
+Accent primary:        #1A6B4A   (signal emerald — primary CTAs, active states)
+Accent hover:          #155C3E   (darker emerald — hover on accent)
+Accent subtle:         #E8F4EE   (very light emerald — tag backgrounds, highlights)
+Accent text:           #1A6B4A   (emerald text on light backgrounds)
+
+Border default:        #E2DED5   (warm grey — default separators)
+Border strong:         #C8C4BB   (stronger separator for dense sections)
+Border accent:         #A8D4BC   (soft emerald border — highlighted items)
+
+Status success:        #1A6B4A   (reuse emerald)
+Status warning:        #B45309   (amber — alerts, limits)
+Status error:          #B91C1C   (red — errors, destructive actions)
+Status neutral:        #6B7280   (grey — inactive, offline)
+
+Code surface:          #1C1C1A   (near-black — code block backgrounds)
+Code text:             #E8E4DC   (warm off-white — code text)
+Code accent:           #5EC99A   (bright emerald — syntax highlight: keywords)
+Code muted:            #8A9BA8   (muted blue-grey — syntax: comments)
+Code string:           #D4A76A   (warm amber — syntax: strings)
+
+------------------------------------------------------------------------
+TYPOGRAPHY
+------------------------------------------------------------------------
+
+Display / Headlines:   Zodiak (serif)
+  — Use for: H1, H2, hero statements, section titles
+  — Weight: 400 (regular) for elegance, 600 (semibold) for emphasis
+  — Never bold a Zodiak headline. It reads heavy.
+
+Body / UI Text:        Switzer (sans-serif)
+  — Use for: paragraphs, labels, nav, buttons, metadata
+  — Weight: 400 for body, 500 for UI labels, 600 for button text
+
+Code / Technical:      JetBrains Mono
+  — Use for: all code blocks, API keys, endpoint strings, JSON, config snippets
+  — Weight: 400 only
+  — Never use another monospace font anywhere on the site
+
+Type scale (base 16px):
+
+  xs:    12px / 1.4  (Switzer — metadata, timestamps, labels)
+  sm:    14px / 1.5  (Switzer — secondary body, captions)
+  base:  16px / 1.6  (Switzer — primary body text)
+  lg:    18px / 1.5  (Switzer — large body, intro paragraphs)
+  xl:    22px / 1.4  (Zodiak — small section heads)
+  2xl:   28px / 1.3  (Zodiak — subsection titles)
+  3xl:   36px / 1.2  (Zodiak — page titles)
+  4xl:   48px / 1.1  (Zodiak — hero headlines, landing H1)
+  5xl:   64px / 1.0  (Zodiak — maximum display size, landing only)
+
+On mobile, the 4xl and 5xl sizes drop to 36px and 44px respectively.
+Never let a headline wrap to more than 3 lines on any screen.
+
+------------------------------------------------------------------------
+SPACING SYSTEM (8px base unit)
+------------------------------------------------------------------------
+
+4px    — micro gaps, icon padding
+8px    — tight spacing, tag padding
+12px   — compact items
+16px   — standard padding unit
+24px   — component gaps
+32px   — section gaps (tight)
+48px   — section gaps (standard)
+64px   — section gaps (loose)
+96px   — major page section separators
+128px  — hero breathing room, top of landing
+
+Max content width:     1120px
+Docs sidebar width:    260px
+Dashboard sidebar:     240px
+Code block max width:  780px
+
+------------------------------------------------------------------------
+BORDER RADIUS
+------------------------------------------------------------------------
+
+none   — 0px   (dividers, separators, table rows)
+sm     — 4px   (code blocks, small tags, chips)
+md     — 8px   (buttons, input fields, small panels)
+lg     — 12px  (cards, panels, modals)
+xl     — 16px  (larger containers if needed)
+full   — 9999px (pill badges, status chips only)
+
+Default policy: use as little radius as possible. This is infrastructure,
+not a consumer app. Rounded corners signal friendliness. Reserve them for
+interactive elements and small chips only.
+
+------------------------------------------------------------------------
+BUTTON SYSTEM
+------------------------------------------------------------------------
+
+Primary button:
+  Background: accent primary (#1A6B4A)
+  Text: inverse (#FAF8F4)
+  Border: none
+  Radius: md (8px)
+  Padding: 10px 20px
+  Font: Switzer 500, 14px
+  Hover: accent hover (#155C3E), lift shadow
+  Active: slight scale-down (0.97)
+
+Secondary button:
+  Background: transparent
+  Text: text primary (#1A1A18)
+  Border: 1px solid border default (#E2DED5)
+  Radius: md (8px)
+  Padding: 10px 20px
+  Font: Switzer 500, 14px
+  Hover: background raised (#F4F1EB), border stronger
+
+Ghost button:
+  Background: transparent
+  Text: accent primary (#1A6B4A)
+  Border: none
+  Padding: 10px 20px
+  Font: Switzer 500, 14px
+  Hover: accent subtle background (#E8F4EE)
+
+Destructive button:
+  Background: transparent
+  Text: status error (#B91C1C)
+  Border: 1px solid #FECACA
+  Radius: md (8px)
+  Use only for revoke key, delete actions
+
+Icon button:
+  Background: transparent
+  Border: none
+  Padding: 8px
+  Hover: background raised
+  Use for: copy, close, expand actions
+
+Copy button (inline code blocks):
+  Positioned top-right inside code block
+  Background: code surface at 80% opacity
+  Text: code text
+  On copy success: icon swaps to checkmark for 1500ms, subtle emerald flash
+
+------------------------------------------------------------------------
+COMPONENT LIBRARY RULES
+------------------------------------------------------------------------
+
+Code blocks:
+  Background: code surface (#1C1C1A)
+  Border: 1px solid rgba(255,255,255,0.08)
+  Radius: sm (4px)
+  Padding: 16px 20px
+  Font: JetBrains Mono 14px
+  Top bar: filename/language label left, copy button right
+  Line numbers: optional for reference pages, always off on quickstart
+
+Input fields:
+  Background: background base (#FAF8F4)
+  Border: 1px solid border default
+  Focus border: accent primary
+  Radius: md (8px)
+  Padding: 10px 14px
+  Font: Switzer 400, 16px
+  Error state: border status error, error text below in sm
+
+Tab components:
+  Bottom border style, not pill/box style
+  Active tab: accent primary underline, accent text color
+  Inactive tab: text muted, no border
+  Transition: 150ms ease
+
+Badges / status chips:
+  Radius: full (pill)
+  Padding: 2px 10px
+  Font: Switzer 500, 12px
+  Operational: accent subtle background, accent text
+  Warning: amber-50 background, amber-700 text
+  Error: red-50 background, red-700 text
+  Offline: grey background, muted text
+
+Dividers:
+  1px solid border default
+  Margin: none by default (set in layout context)
+  Never use decorative dividers. Only structural.
+
+Tables:
+  Header: background raised, Switzer 500 12px uppercase, text muted
+  Row: border-bottom border default, Switzer 400 14px
+  Row hover: background raised
+  No outer border on tables. Rows only.
+
+Tooltips:
+  Background: text primary (#1A1A18)
+  Text: text inverse
+  Radius: sm (4px)
+  Padding: 6px 10px
+  Font: Switzer 400, 12px
+  Max width: 220px
+  Delay: 300ms show, 100ms hide
+
+------------------------------------------------------------------------
+MOTION SYSTEM
+------------------------------------------------------------------------
+
+All animation uses transform and opacity only.
+Never animate layout properties (width, height, margin, padding).
+Duration targets: micro 100ms, fast 150ms, standard 200ms, slow 300ms.
+Easing default: cubic-bezier(0.4, 0, 0.2, 1) — standard ease.
+
+Entrance animations:
+  Fade + rise: opacity 0→1, translateY 8px→0, 200ms, standard ease
+  Use for: page sections, modals, tooltips, cards on scroll
+
+Hover states:
+  Button lift: translateY -1px, shadow deepens, 150ms
+  Card hover: translateY -2px, border strengthens, 200ms
+  Never scale elements above 1.02 on hover
+
+Interactive feedback:
+  Button press: scale 0.97, 100ms
+  Copy success: icon swap + color pulse, 1500ms total
+  Form error: subtle horizontal shake, 300ms, only on submit
+
+Scroll reveals:
+  Sections fade + rise as they enter viewport
+  Use IntersectionObserver with 0.15 threshold
+  Stagger child elements by 60ms per item, max 5 items staggered
+  Never stagger more than 5 elements in a row — it becomes noise
+
+Page transitions:
+  Fade out 150ms, fade in 200ms
+  No sliding pages. No dramatic transitions.
+  Auth → Dashboard: instant redirect, no transition animation
+
+Avoid completely:
+  Parallax of any kind
+  Animated background blobs that move on scroll
+  Bounce or spring physics
+  Keyframe loops playing constantly
+  CSS animations on background-position
+
+------------------------------------------------------------------------
+BACKGROUND SYSTEM
+------------------------------------------------------------------------
+
+The background has 4 layers, always in this order (bottom to top):
+
+Layer 1 — Base:
+  Solid background base color (#FAF8F4)
+  No texture, no gradient here.
+
+Layer 2 — Grain:
+  Very fine SVG noise texture, opacity 0.035
+  Gives the paper feel without looking designed.
+
+Layer 3 — Atmospheric:
+  One or two radial gradient blobs, very large (600–900px radius)
+  Opacity 0.06–0.10 maximum. If you can clearly see it, it's too strong.
+  Color: emerald tinted (hsl(155, 40%, 92%)) for the primary, 
+         warm neutral (hsl(40, 30%, 90%)) for secondary if needed
+  Position: varies per page (defined per page below)
+  These are completely static — no animation, no movement.
+
+Layer 4 — Structural (docs/dashboard only):
+  Extremely faint grid or contour lines, opacity 0.025
+  For docs: suggests graph paper / technical drafting
+  For dashboard: suggests a data grid / operational surface
+  Never visible as a design element. Only felt.
+
+Pages where Layer 3 is active:
+  Landing — behind hero (top-left), behind final CTA (bottom-right)
+  Auth — centered, very subtle
+  Docs home — faint, top area only
+  Quickstart — top-left, follows the step flow
+  Dashboard — present but minimal
+
+Pages where Layer 3 is minimal or absent:
+  Tool reference pages — replaced by subtle tool-specific line patterns
+  API reference — no atmospheric glow at all
+  Settings — none, pure paper only
+
+------------------------------------------------------------------------
+NAVIGATION — GLOBAL
+------------------------------------------------------------------------
+
+Public nav (landing, docs):
+  Left: OptiContext wordmark (Zodiak, text primary)
+  Center or right: Docs · Tools · API Reference
+  Far right: Sign in (ghost button) · Get your agent key (primary button)
+  Height: 64px
+  Background: background base at 92% opacity, backdrop-blur: 8px
+  Border-bottom: 1px border default, visible only on scroll
+  Position: sticky top
+
+Signed-in nav (dashboard):
+  Left: OptiContext wordmark
+  Right: user avatar / account menu
+  No main nav links — replaced by sidebar
+  Height: 60px
+  Background: background base, full opacity
+  Border-bottom: 1px border strong (always visible)
+
+Docs sidebar:
+  Width: 260px
+  Background: background raised
+  Border-right: 1px border default
+  Font: Switzer 400, 14px (links), Switzer 600 12px uppercase (section labels)
+  Active link: accent text, accent subtle left border (3px)
+  Hover link: text primary
+  Sections: Overview · Quickstart · Tools · API Reference · Limits
+
+Dashboard sidebar:
+  Width: 240px
+  Background: background raised
+  Border-right: 1px border default
+  Links: Dashboard · Settings
+  Font: Switzer 500, 14px
+  Active: accent subtle background, accent text
+
+Footer:
+  Keep it minimal
+  Left: OptiContext — © 2026
+  Right: Docs · GitHub (if public) · Status chip (tiny)
+  Font: Switzer 400, 13px, text muted
+  Background: background raised
+  Border-top: 1px border default
+  No big footer with columns. One slim bar.
+
+================================================================================
+PART 1 — LANDING PAGE  /
+================================================================================
+
+Purpose:
+  Make the product instantly understood by both a developer and a non-technical user.
+  Build enough trust to click "Get your agent key."
+  Never let anyone leave confused about what OptiContext is.
+
+Signed-in state awareness:
+  If user is logged in: primary CTA changes to "Go to dashboard"
+  If user is logged out: primary CTA is "Get your agent key"
+  Check Firebase auth state on mount. No flash of wrong state.
+
+------------------------------------------------------------------------
+SECTION 1 — HERO
+------------------------------------------------------------------------
+
+Full viewport height, centered vertically.
+
+Background atmospheric: one large emerald glow, top-left area, very subtle.
+
+Content:
+  Eyebrow line: "Model Context Protocol Infrastructure"
+    — Switzer 500, 13px, uppercase, letter-spacing 0.08em, accent text
+    — Small emerald dot or dash before the text
+
+  Headline (H1):
+    "One key. Four tools.
+     One edge endpoint."
+    — Zodiak 5xl (64px desktop, 44px mobile)
+    — Text primary
+    — Line break is intentional. Keep it. Don't let it reflow into one line.
+
+  Supporting line:
+    "OptiContext is a production MCP server on Cloudflare's edge network.
+     Give any AI agent instant access to search, voice, file analysis,
+     and persistent memory — with a single agent key."
+    — Switzer 400, lg (18px)
+    — Text secondary
+    — Max width: 560px
+    — Line height: 1.6
+
+  CTA group:
+    Primary: "Get your agent key" (primary button, slightly larger: 12px 24px padding)
+    Secondary: "See the docs" (secondary button, same size)
+    Gap between buttons: 12px
+
+  Trust indicators (below CTA, small):
+    Three items inline with small icons:
+    "Edge-deployed · 300+ PoPs" | "Zero cold starts" | "Free forever"
+    — Switzer 400, sm (14px), text muted
+    — Separator: thin vertical rule between items
+
+  Integration preview (optional, adds credibility):
+    A small code block showing an MCP config snippet.
+    Approximately 6 lines. Shows the endpoint and key pattern.
+    This is the only element that goes below the fold before scroll.
+    — This must be real. Use actual endpoint format from the backend plan.
+
+Scroll indicator:
+  Subtle chevron-down or thin animated line at bottom of hero
+  Fades out after first scroll
+
+------------------------------------------------------------------------
+SECTION 2 — TOOL SYSTEM
+------------------------------------------------------------------------
+
+Heading: "Four tools. One integration."
+  — Zodiak 3xl, text primary
+
+Subtext:
+  "Connect once. Every tool is immediately available to your agent."
+  — Switzer lg, text secondary
+
+Layout:
+  Four tool modules in a horizontal row (2x2 on mobile)
+  These are NOT cards. They are structured text blocks with a light border.
+  No drop shadows. No heavy backgrounds. Just structure.
+
+Each tool module contains:
+  Tool name in Zodiak 2xl
+  One-line description in Switzer base, text secondary
+  "Best for:" — one short phrase in Switzer sm, text muted
+  A ghost button: "View reference →"
+
+The four tools:
+  
+  IntelliSearch
+    AI-enhanced web search with advanced dorking and real-time summarization.
+    Best for: agents that need current, precise information from the web.
+
+  VoiceBridge
+    Low-latency TTS streaming with 48 voices across 8 languages.
+    Best for: Telegram, Discord, and WhatsApp bots that speak.
+
+  DeepDoc
+    Deep file analysis powered by Gemini's 2M token context window.
+    Best for: agents analyzing PDFs, code, images, audio, and large documents.
+
+  MemoryCore
+    Persistent RAG memory using pgvector. Agents remember across sessions.
+    Best for: personal agents that build a model of users over time.
+
+Subtle tool identity:
+  Each module has a very faint background pattern (1–2% opacity):
+  IntelliSearch: faint branching search paths
+  VoiceBridge:   faint sine-wave curves
+  DeepDoc:       faint horizontal document strata lines
+  MemoryCore:    faint node-connection dots
+
+These patterns are not decoration. They are atmosphere.
+If they read as visible design elements, reduce opacity.
+
+------------------------------------------------------------------------
+SECTION 3 — HOW IT WORKS
+------------------------------------------------------------------------
+
+Heading: "How it works"
+  — Zodiak 3xl
+
+Layout: Horizontal flow, 5 steps
+  On mobile: vertical stack
+
+Steps:
+  1. Create account
+  2. Get your API key
+  3. Add to your agent config
+  4. Call the endpoint
+  5. Get results at the edge
+
+Each step:
+  Step number: Switzer 500, 12px, text muted
+  Step title: Zodiak xl, text primary
+  One sentence description: Switzer base, text secondary
+
+Connector between steps: thin line or subtle arrow, border default color
+This is not animated. It is static. Clean. Readable.
+
+------------------------------------------------------------------------
+SECTION 4 — TRUST BLOCK
+------------------------------------------------------------------------
+
+Heading: "Built for production. Free forever."
+  — Zodiak 2xl, text primary
+
+Four trust points in a clean 2x2 grid (or 4-column row on desktop):
+
+  Edge-deployed infrastructure
+  Cloudflare Workers across 300+ global points of presence.
+  Sub-5ms cold starts. Never a container spin-up.
+
+  MCP protocol native
+  Streamable HTTP transport. Full JSON-RPC 2.0 compliance.
+  Works with Claude Code, Cursor, and any custom MCP client.
+
+  One key, total control
+  Create per-agent keys. Revoke instantly from the dashboard.
+  Usage tracked per tool, per agent, in real time.
+
+  Zero infrastructure cost
+  Every component runs on a free tier.
+  Cloudflare · Supabase · Firebase · Turso · Cerebras · Gemini.
+
+Style: plain text blocks, no heavy cards, thin top border on each block.
+
+------------------------------------------------------------------------
+SECTION 5 — FINAL CTA
+------------------------------------------------------------------------
+
+A clean, wide strip.
+Background: background raised (#F4F1EB) — slight differentiation from page base
+Centered content:
+
+  Headline: "Ready to extend your agent?"
+    — Zodiak 3xl
+
+  Subtext: "Add OptiContext to your MCP config and your agent gains
+            search, voice, memory, and file analysis in minutes."
+    — Switzer lg, text secondary, max-width 480px
+
+  CTA: "Get your agent key" (primary button)
+  Secondary: "Read the quickstart" (ghost button)
+
+No background glow here. Let it breathe.
+
+================================================================================
+PART 2 — AUTHENTICATION PAGE  /auth
+================================================================================
+
+Purpose:
+  Authentication is a transaction, not an experience.
+  This page should take less than 10 seconds to complete.
+  Nothing here should require thought.
+
+Structure:
+  Vertically and horizontally centered.
+  Two-column layout on desktop (decorative left, auth form right).
+  Single column on mobile.
+
+Left column (desktop only):
+  Background: background raised
+  Contains:
+    OptiContext wordmark (large, Zodiak)
+    One short statement:
+      "One key. Four tools. One edge endpoint."
+    Very subtle atmospheric background (emerald glow, low opacity)
+  This column occupies ~45% of width.
+  Its only job is to reinforce the product identity while the user processes auth.
+
+Right column (auth form):
+  Background: background base
+  Centered content, max-width 360px within the column.
+
+  OptiContext wordmark (Zodiak, medium) — only on mobile (hidden on desktop)
+  
+  Heading: "Sign in to OptiContext"
+    — Zodiak 2xl
+  
+  Subtext: "Access your agent keys and usage dashboard."
+    — Switzer base, text secondary
+
+  Google button:
+    Full-width (360px)
+    Background: white (#FFFFFF)
+    Border: 1px solid border default
+    Radius: md (8px)
+    Padding: 12px 20px
+    Google logo SVG (left), "Continue with Google" (center)
+    Font: Switzer 500, 15px, text primary
+    Hover: background raised
+    This is not a styled primary button. It looks like a standard Google button.
+    Reason: Users recognize and trust the Google auth pattern.
+    Do not brand it in emerald. Do not make it look like your own CTA.
+
+  Divider or separator below:
+    A very fine horizontal rule
+    Text below: Switzer 400, 13px, text muted
+    "By continuing, you agree to OptiContext's Terms of Service."
+    Link terms inline. Keep it one line.
+
+Redirect behavior:
+  If already authenticated on page load: redirect to /dashboard immediately.
+  No flash of auth page for signed-in users.
+  Post-sign-in redirect: always /dashboard.
+
+Error state:
+  If Google auth fails: show a small error chip below the Google button.
+  Text: "Authentication failed. Please try again."
+  Style: status error color, sm text, no loud modal.
+
+================================================================================
+PART 3 — DOCS HOME  /docs
+================================================================================
+
+Purpose:
+  The technical map. Every developer who lands here should know exactly
+  where to go within 5 seconds.
+
+Layout:
+  Left sidebar (260px): persistent docs navigation
+  Right content area: the actual docs home content
+  No top hero section. Start immediately with content.
+
+Top of content area:
+  Breadcrumb: "Documentation" (static, no link)
+  — Switzer 500, 13px, text muted, uppercase
+
+  Heading: "OptiContext Documentation"
+    — Zodiak 3xl
+
+  One-line descriptor:
+    "A production MCP server. One endpoint, four capabilities, one agent key."
+    — Switzer lg, text secondary
+
+  Search box (prominent):
+    Full width of content area
+    Background: background raised
+    Border: 1px border default
+    Radius: md (8px)
+    Placeholder: "Search documentation..."
+    Icon: magnifier left
+    Keyboard shortcut hint right: "⌘K"
+    Focus: border accent primary, subtle bloom
+    This is the most important UI element on this page.
+
+------------------------------------------------------------------------
+CONTENT SECTIONS
+------------------------------------------------------------------------
+
+Start here:
+  Heading: "Start here" — Switzer 500, 12px, uppercase, text muted
+  Two options presented as clean text links with short descriptors:
+
+  Quickstart guide
+    Go from zero to first MCP call in under 5 minutes.
+    → "Start the quickstart" (ghost button)
+
+  API reference
+    Full endpoint contract, schemas, and error codes.
+    → "View API reference" (ghost button)
+
+Documentation sections:
+  A clean list of all doc sections with separators:
+
+  Authentication
+    How OptiContext issues and validates agent keys.
+    JWT, Firebase Auth, Bearer token format.
+
+  Transport
+    Streamable HTTP. How the /mcp endpoint behaves.
+    Request format, session handling, response streaming.
+
+  IntelliSearch
+    Web search with AI-enhanced dorking and summarization.
+    Input schema, output schema, usage limits.
+
+  VoiceBridge
+    TTS streaming. 48 voices, 8 languages, sub-300ms TTFB.
+    Audio format, caching behavior, Telegram delivery.
+
+  DeepDoc
+    File analysis via Gemini's 2M token context window.
+    Upload flow, supported types, analysis schema.
+
+  MemoryCore
+    Persistent RAG memory across agent sessions.
+    Namespace system, write/search operations, summarization.
+
+  API Reference
+    Complete endpoint reference. Every route, every field.
+
+  Limits
+    Per-tool rate limits, free tier constraints, budget guard behavior.
+
+Each section entry:
+  Title: Zodiak xl, text primary, clickable
+  Description: Switzer sm, text secondary
+  Thin separator below
+  No cards, no boxes. Just clean vertical rhythm.
+
+------------------------------------------------------------------------
+SIDEBAR CONTENT
+------------------------------------------------------------------------
+
+Section labels: Switzer 600, 11px, uppercase, letter-spacing 0.06em, text muted
+
+  OVERVIEW
+    Introduction
+    Quick start
+
+  CAPABILITIES
+    IntelliSearch
+    VoiceBridge
+    DeepDoc
+    MemoryCore
+
+  REFERENCE
+    API Reference
+    Authentication
+    Transport
+    Error Codes
+    Rate Limits
+
+Active link style:
+  3px left border, accent primary
+  Background: accent subtle
+  Text: accent text
+  Radius: 0 sm sm 0 (right side only)
+
+================================================================================
+PART 4 — QUICKSTART  /docs/quickstart
+================================================================================
+
+Purpose:
+  The developer conversion page.
+  First successful MCP call in under 5 minutes.
+  This page makes or breaks adoption.
+
+Layout:
+  Docs sidebar (same as /docs)
+  Content area: step-by-step vertical flow
+  Optional sticky right panel on large screens: shows current step config
+
+Heading: "Quickstart"
+  — Zodiak 3xl
+Subtext: "From zero to first MCP call in under 5 minutes."
+  — Switzer lg, text secondary
+
+Client tabs (immediately below heading):
+  Claude Code · Cursor · OpenClaw · Custom MCP Client
+  Tab style: bottom-border, not pill/box
+  Active tab: accent underline
+  Config and commands update based on selected tab
+
+------------------------------------------------------------------------
+STEP FLOW
+------------------------------------------------------------------------
+
+Steps are numbered 1–5. Each step has:
+  - Step number and title (visible even when collapsed)
+  - Status: pending (text muted) / active (text primary) / complete (accent text)
+  - Content reveals on active step only (progressive disclosure)
+  - Complete steps show a small checkmark, content collapses
+
+Step 1 — Create your account
+  Content:
+    "If you haven't already, sign in with Google."
+    Single link/button: "Sign in → /auth"
+    If already signed in: show "You're signed in as [email]. Continue." with checkmark.
+
+Step 2 — Get your API key
+  Content:
+    "Go to your dashboard and create an agent key."
+    Link: "Open dashboard →"
+    A note on key format: "Your key looks like: opctx_xxxxxxxxxxxxxxxx"
+    — Small code block, JetBrains Mono
+
+Step 3 — Copy your MCP config
+  Content:
+    This is the most important step. Spend the most space here.
+    
+    Show a config block per client tab. Real, working configs.
+
+    Claude Code tab:
+      {
+        "mcpServers": {
+          "opticontext": {
+            "type": "http",
+            "url": "https://mcp.opticontext.dev/mcp",
+            "headers": {
+              "Authorization": "Bearer YOUR_AGENT_KEY"
+            }
+          }
+        }
+      }
+
+    Cursor tab:
+      Show Cursor's MCP config format (cursor/.cursorrules or settings.json path)
+      Same endpoint and auth header structure
+
+    OpenClaw tab:
+      Show agent config format appropriate to OpenClaw's integration
+
+    Custom MCP Client tab:
+      Show the raw HTTP request structure:
+      POST https://mcp.opticontext.dev/mcp
+      Authorization: Bearer YOUR_AGENT_KEY
+      Content-Type: application/json
+
+    Each block has a prominent copy button.
+    Below each block: "Replace YOUR_AGENT_KEY with the key from step 2."
+
+Step 4 — Make your first call
+  Content:
+    Show a simple tool invocation — IntelliSearch is the best first call.
+    
+    Example prompt to the agent:
+      "Search for the latest developments in MCP servers"
+    
+    What the agent sends to OptiContext internally:
+      {
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+          "name": "opticontext_search",
+          "arguments": {
+            "query": "latest developments in MCP servers",
+            "mode": "quick"
+          }
+        },
+        "id": 1
+      }
+    
+    Copy button on this block as well.
+    Note: "You don't need to write this JSON yourself. Your agent does it automatically."
+
+Step 5 — Verify the response
+  Content:
+    Show a sample truncated response structure:
+      {
+        "jsonrpc": "2.0",
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "..."
+            }
+          ]
+        },
+        "id": 1
+      }
+    
+    Below: "If you see this structure, your integration is working."
+    
+    Green success chip: "Integration verified"
+    
+    Two next steps:
+      "Explore all four tools →" links to /docs/tools/intellisearch
+      "View full API reference →" links to /docs/api-reference
+
+------------------------------------------------------------------------
+RIGHT PANEL (large screens, sticky)
+------------------------------------------------------------------------
+
+Shows a live summary of:
+  Current step title
+  The config block for the selected tab (compact version)
+  Copy button
+
+This panel scrolls with the user and always shows the most
+relevant config for where they are in the flow.
+It is display-only. Not interactive beyond copy.
+
+================================================================================
+PART 5 — TOOL REFERENCE PAGES  /docs/tools/[tool-name]
+================================================================================
+
+Route pattern covers:
+  /docs/tools/intellisearch
+  /docs/tools/voicebridge
+  /docs/tools/deepdoc
+  /docs/tools/memorycore
+
+Each page follows an identical skeleton.
+Visual atmosphere differs per tool (detailed below).
+
+------------------------------------------------------------------------
+PAGE STRUCTURE (identical across all four)
+------------------------------------------------------------------------
+
+Breadcrumb: Documentation › Tools › [Tool Name]
+  — Switzer 500, 13px, text muted
+
+Tool name heading: Zodiak 4xl, text primary
+One-line description: Switzer lg, text secondary
+
+"Best for" block:
+  Background: accent subtle (#E8F4EE)
+  Border-left: 3px solid accent primary
+  Radius: 0 md md 0
+  Padding: 12px 16px
+  Label: "Best for" — Switzer 600, 12px, uppercase, accent text
+  Content: plain text, Switzer base, text primary
+  This appears BEFORE the technical sections intentionally.
+  Developers skim. This block tells them in 1 second if this tool matters to them.
+
+Sections (in order):
+
+  What it does
+    3–5 sentences. Plain Switzer body text.
+    Technical but not abstract.
+
+  Problem it solves
+    2–3 sentences. Frame from the agent's perspective.
+    What breaks without this tool.
+
+  Input schema
+    A clean table: Parameter · Type · Required · Description
+    Table style as defined in component system.
+    Below the table: a JSON example of a full valid input.
+    Code block, copyable.
+
+  Output schema
+    Same format: table + JSON example.
+    Emphasize the fields agents will actually use.
+
+  Example call
+    A complete tool invocation as an agent would send it.
+    Code block, copyable.
+    Below: the response it would produce. Truncated but real.
+
+  Error states
+    Table: Error code · Cause · Resolution
+    Keep this concise. 5–8 rows maximum.
+
+  Limits
+    Table or clean list: what's limited, what the limit is.
+    If there's a budget guard behavior, describe it here.
+
+------------------------------------------------------------------------
+TOOL-SPECIFIC ATMOSPHERE
+------------------------------------------------------------------------
+
+IntelliSearch:
+  Background pattern: faint radial lines suggesting search result paths
+  Subtle branching from a central point, upper-right area
+  Opacity: 0.025 maximum
+  Color: emerald tinted, near-invisible
+
+VoiceBridge:
+  Background pattern: faint sine-wave curves, horizontal
+  Spaced evenly, suggesting audio waveform
+  Opacity: 0.02
+  Color: neutral warm, barely there
+
+DeepDoc:
+  Background pattern: faint horizontal strata lines
+  Suggesting document pages layered on each other
+  Opacity: 0.02
+  Color: warm neutral
+
+MemoryCore:
+  Background pattern: faint dot grid, nodes connected by thin lines
+  Suggesting a graph of stored memories
+  Opacity: 0.025
+  Color: emerald tinted
+
+These patterns are SVG backgrounds.
+They must be imperceptible at normal reading distance.
+Test: if someone screenshots the page and you can see the pattern clearly,
+reduce opacity by 50%.
+
+------------------------------------------------------------------------
+TOOL PAGE NAVIGATION
+------------------------------------------------------------------------
+
+At the bottom of each tool page, show:
+  ← Previous tool (if exists)
+  → Next tool (if exists)
+  "View full API reference" (center)
+
+Tool order: IntelliSearch → VoiceBridge → DeepDoc → MemoryCore
+
+================================================================================
+PART 6 — API REFERENCE  /docs/api-reference
+================================================================================
+
+Purpose:
+  The technical contract. Every endpoint, every field, every behavior.
+  Developers integrating programmatically live here.
+
+Design principle for this page:
+  Less is more. This page earns trust through density and precision,
+  not through visual interest. Do not add decoration here.
+
+Background: paper grain only. No atmospheric glow. No structural grid.
+
+Layout:
+  Sidebar: same docs sidebar
+  Content: full width of content area
+
+Top:
+  Breadcrumb: Documentation › API Reference
+  Heading: "API Reference" — Zodiak 3xl
+  Subtext: "Complete contract for the OptiContext MCP endpoint." — Switzer base, text secondary
+  
+  Inline quick-nav:
+    Authentication · Endpoints · Schemas · Error Codes · Rate Limits · Transport
+    — These are anchor links, styled as tabs or inline pills
+    — Allow jumping to section without scrolling
+
+------------------------------------------------------------------------
+SECTIONS
+------------------------------------------------------------------------
+
+Authentication:
+  Heading: Zodiak 2xl
+  Content:
+    Key format: opctx_<hex>
+    Header: Authorization: Bearer <key>
+    Key creation: via dashboard only
+    Token type: long-lived agent keys (not JWTs at the endpoint level)
+
+  Code block:
+    curl -X POST https://mcp.opticontext.dev/mcp \
+      -H "Authorization: Bearer opctx_your_key_here" \
+      -H "Content-Type: application/json" \
+      -d '{ ... }'
+
+Endpoints:
+
+  POST /mcp
+    Primary MCP endpoint. Accepts all tool calls.
+    Transport: Streamable HTTP
+    Format: JSON-RPC 2.0
+    Sessions: optional Mcp-Session-Id header for stateful sessions
+
+  POST /upload
+    File upload endpoint for DeepDoc.
+    Content-Type: multipart/form-data
+    Max file size: 50MB
+    Returns: file_id used in opticontext_analyze calls
+
+  GET /health
+    Health check. Returns 200 if operational.
+    No auth required.
+
+  GET /usage
+    Returns current usage stats for the authenticated key.
+    Auth required.
+
+Tool Schemas:
+  Show the JSON schema for each MCP tool.
+  One section per tool. Code block per schema.
+
+  opticontext_search (IntelliSearch)
+  opticontext_tts (VoiceBridge)
+  opticontext_analyze (DeepDoc)
+  opticontext_memory_write (MemoryCore)
+  opticontext_memory_search (MemoryCore)
+
+Error Codes:
+  Table: Code · HTTP Status · Meaning · Resolution
+
+  INVALID_KEY       401   API key missing or malformed
+  KEY_NOT_FOUND     401   API key does not exist
+  KEY_REVOKED       401   API key has been revoked
+  RATE_LIMITED      429   Per-agent rate limit exceeded
+  TOOL_UNAVAILABLE  503   Downstream provider temporarily unavailable
+  CONTEXT_TOO_LARGE 413   Input exceeds model context window
+  UPLOAD_TOO_LARGE  413   File exceeds 50MB limit
+  UNSUPPORTED_TYPE  415   File type not supported by DeepDoc
+
+Rate Limits:
+  Per-key per-day limits for each tool.
+  Budget guard behavior: automatic fallback before hard limit.
+  Table: Tool · Daily limit · Behavior at limit
+
+Transport:
+  Short section on Streamable HTTP behavior.
+  MCP-Session-Id header for session persistence.
+  Streaming response behavior for VoiceBridge.
+
+================================================================================
+PART 7 — DASHBOARD  /dashboard
+================================================================================
+
+Purpose:
+  The user is now authenticated. They want two things immediately:
+  1. Their MCP config to copy
+  2. Visibility into what's happening
+
+Design shift:
+  Dashboard pages use the same color system and fonts, but feel denser.
+  More structure. More borders. More information per viewport.
+  Still not an admin panel nightmare.
+
+Layout:
+  Top nav (60px) — wordmark + account menu
+  Left sidebar (240px) — Dashboard · Settings
+  Main content area
+
+------------------------------------------------------------------------
+DASHBOARD HOME
+------------------------------------------------------------------------
+
+Top area — Primary action (above the fold, immediately visible):
+
+  Heading: "Your MCP endpoint" — Zodiak 2xl
+  
+  Two copy blocks side by side:
+  
+  Block 1: Endpoint URL
+    Label: "Endpoint" — Switzer 600, 12px, uppercase, text muted
+    Value: https://mcp.opticontext.dev/mcp
+    — JetBrains Mono, base
+    Copy button: right-aligned
+    Background: background sunken (#EFECE4)
+    Border: 1px border default
+    Radius: md
+
+  Block 2: API Key
+    Label: "API Key" — Switzer 600, 12px, uppercase, text muted
+    Value: opctx_████████████████ (masked by default)
+    Eye icon to reveal
+    Copy button: right-aligned
+    Background: background sunken
+    Border: 1px border default
+
+  Below both blocks:
+    A full MCP config snippet (collapsible, starts open):
+      The JSON config for Claude Code (most common client)
+      Client selector tabs: Claude Code · Cursor · OpenClaw · Custom
+      Copy button: prominent, "Copy MCP config"
+
+System status chip:
+  Positioned top-right of the main area (or top of sidebar)
+  Shows: ● Operational (green) or ● Degraded (amber) or ● Incident (red)
+  Polls GET /health every 60 seconds
+  Clicking it shows a small tooltip: "All systems operational · checked 30s ago"
+  This is not a status page. It is an inline chip only.
+
+------------------------------------------------------------------------
+USAGE SUMMARY
+------------------------------------------------------------------------
+
+Heading: "Usage today" — Zodiak xl
+
+Four usage blocks, one per tool, in a row:
+  Tool name: Switzer 600, 14px
+  Count: Zodiak 2xl (the number)
+  Limit: "of 100 today" — Switzer sm, text muted
+  Progress bar: thin (4px), accent primary fill, background sunken track
+  Status: within limit (no color change) / near limit (amber) / at limit (red)
+
+Below the four blocks:
+  Total requests today: X
+  Total requests this month: X
+  — Switzer base, text secondary, right-aligned
+
+------------------------------------------------------------------------
+RECENT ACTIVITY
+------------------------------------------------------------------------
+
+Heading: "Recent activity" — Zodiak xl
+
+A clean table (no outer border):
+  Time · Tool · Agent Key (masked) · Status · Latency
+
+Show last 10 entries.
+"View full logs" link below table → future /dashboard/logs route (not in v1)
+For v1: show a note "Full log export coming soon" in text muted sm.
+
+Table style: as defined in component system.
+Status column: small badge chips (success green, error red).
+Latency column: JetBrains Mono, sm.
+Time column: relative ("2 min ago") with full timestamp in tooltip on hover.
+
+------------------------------------------------------------------------
+QUICK ACTIONS (bottom of main area)
+------------------------------------------------------------------------
+
+Two links:
+  "Manage agent keys →" — links to /dashboard/settings
+  "View quickstart →" — links to /docs/quickstart
+
+Style: ghost buttons, side by side.
+
+================================================================================
+PART 8 — SETTINGS  /dashboard/settings
+================================================================================
+
+Purpose:
+  Complete key and account management.
+  Minimal, functional, precise.
+
+Layout:
+  Same top nav and sidebar as dashboard home.
+
+Heading: "Settings" — Zodiak 3xl
+
+------------------------------------------------------------------------
+SECTION: Agent Keys
+------------------------------------------------------------------------
+
+Heading: "API Keys" — Zodiak 2xl
+
+Description:
+  "Each agent should use its own key. Revoke individually if compromised."
+  — Switzer base, text secondary
+
+Create key flow:
+  Input: "Key name" (required) — placeholder "e.g. claude-code-local"
+  Button: "Create new key" (primary)
+  On creation: show the full key ONCE in a modal or inline reveal.
+  Show a warning: "This key will not be shown again. Copy it now."
+  Style the warning with status warning color, not red.
+
+Keys table:
+  Columns: Name · Key (masked) · Created · Last used · Actions
+  Actions per row: Copy (icon) · Rename (icon) · Revoke (icon)
+  Revoke action: requires a confirmation step.
+    Inline confirmation: "Revoke this key? This cannot be undone." + red Revoke button.
+    No full-screen modal for this. An inline expansion is sufficient.
+  Maximum keys shown without pagination: 10.
+
+------------------------------------------------------------------------
+SECTION: Usage Alerts
+------------------------------------------------------------------------
+
+Heading: "Usage Alerts" — Zodiak 2xl
+
+Description:
+  "Get notified before hitting daily limits."
+  — Switzer base, text secondary
+
+Alert threshold input:
+  Label: "Alert me when daily usage reaches"
+  A number input with a percent selector: [80] % of daily limit
+  Below: "You'll receive a Telegram message when any tool reaches this threshold."
+  Save button: "Save threshold" (secondary button)
+
+------------------------------------------------------------------------
+SECTION: Telegram Webhook
+------------------------------------------------------------------------
+
+Heading: "Telegram Alerts" — Zodiak 2xl
+
+Description:
+  "Connect a Telegram bot to receive usage alerts."
+  — Switzer base, text secondary
+
+Input: "Telegram Bot Token" — placeholder "1234567890:AAAA..."
+Input: "Chat ID" — placeholder "-100123456789"
+Button: "Save webhook" (secondary)
+Test button: "Send test message" (ghost) — sends a test alert immediately
+
+Below: link to documentation for setting up a Telegram bot.
+
+------------------------------------------------------------------------
+SECTION: Account
+------------------------------------------------------------------------
+
+Heading: "Account" — Zodiak 2xl
+
+Shows:
+  Email: [user's Google email] — read only
+  Sign in method: Google — with Google logo
+  
+  Sign out button: ghost, bottom of section.
+  "Sign out" — no confirmation needed. Auth is fast.
+
+------------------------------------------------------------------------
+DESTRUCTIVE ACTION DESIGN
+------------------------------------------------------------------------
+
+For all destructive actions (revoke key):
+  Use destructive button style (red border, red text)
+  Always require a confirmation step (inline, not modal)
+  Never auto-execute a destructive action on first click
+  Confirmation text: specific, not vague ("Revoke this key? This cannot be undone.")
+
+================================================================================
+PART 9 — ROUTE ALIASES
+================================================================================
+
+/signin  → /auth
+/signup  → /auth
+/docs/tools → /docs
+
+These are redirects, not pages.
+Implement as 301 redirects or router-level redirects.
+
+================================================================================
+PART 10 — BUILD ORDER
+================================================================================
+
+Recommended order:
+
+1. Global design system (tokens, fonts, components)
+2. Landing page (/)
+3. Auth page (/auth)
+4. Docs home (/docs)
+5. Quickstart (/docs/quickstart)
+6. Dashboard home (/dashboard)
+7. Dashboard settings (/dashboard/settings)
+8. Tool reference pages (/docs/tools/[tool])
+9. API reference (/docs/api-reference)
+10. Polish: motion, responsive, cross-browser
+
+Rationale:
+  Get the public story right first.
+  Then auth.
+  Then the operational UI.
+  Tool pages come last because they require the most content,
+  not the most design decisions.
+
+================================================================================
+PART 11 — WHAT NOT TO BUILD
+================================================================================
+
+These were all considered and rejected:
+
+/about — OptiContext is a tool, not a company story.
+/blog — Premature. Adds maintenance. Adds nothing to v1.
+/pricing — Free forever. Nothing to explain. No page needed.
+/contact — Dev tool. GitHub issues or a footer Discord link is enough.
+/status — The inline dashboard chip handles this adequately for v1.
+/tools — Redundant. Landing covers non-technical. Docs cover technical.
+/changelog — Premature for v1.
+/dashboard/logs — Mentioned in dashboard as "coming soon". Not v1.
+/dashboard/analytics — Same. Deferred beyond v1.
+
+Do not add these pages under deadline pressure or client pressure.
+Every page added must earn its place with a specific, irreplaceable function.
+
+================================================================================
+PART 12 — FINAL CHECKLIST BEFORE LAUNCH
+================================================================================
+
+Design:
+  [ ] All pages use correct color tokens (no hardcoded hex values in components)
+  [ ] Zodiak used only for display/headlines
+  [ ] Switzer used for all body and UI
+  [ ] JetBrains Mono used for all code and technical strings
+  [ ] No hardcoded pixel values in spacing (use spacing system)
+  [ ] All interactive states implemented (hover, active, focus, disabled)
+  [ ] All error states implemented (form, API, auth)
+
+Performance:
+  [ ] Fonts loaded via next/font or equivalent (no layout shift)
+  [ ] No unused animations running in background
+  [ ] Code blocks syntax highlighted (not images)
+  [ ] Copy buttons functional across all browsers
+
+Auth:
+  [ ] Signed-in state check on landing (correct CTA shown)
+  [ ] Auth page redirects if already signed in
+  [ ] Dashboard routes protected (redirect to /auth if not signed in)
+  [ ] Sign-out clears Firebase session correctly
+
+Content:
+  [ ] All code examples use real endpoint format
+  [ ] Agent key format consistent: opctx_<hex>
+  [ ] Endpoint URL consistent: https://mcp.opticontext.dev/mcp
+  [ ] All four tools documented with real schema from backend plan
+  [ ] Error codes match backend implementation
+
+Mobile:
+  [ ] Landing readable and usable on 375px width
+  [ ] Docs sidebar collapses to drawer on mobile
+  [ ] Dashboard simplified on mobile (no sidebar, bottom nav or hamburger)
+  [ ] All code blocks horizontally scrollable on mobile
+  [ ] Touch targets minimum 44px height
+
+================================================================================
+
+OPTICONTEXT FRONTEND GUIDE v1.0
+Sandy · May 2026
+Total pages: 8 routes · 11 rendered pages
+Total cost: $0
+
+================================================================================

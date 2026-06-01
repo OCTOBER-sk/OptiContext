@@ -1,0 +1,23 @@
+# Environment files (contain real API keys)
+worker/.dev.vars
+dashboard/.env.local
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+worker/dist/
+
+# Wrangler
+worker/.wrangler/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

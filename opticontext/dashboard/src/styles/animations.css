@@ -1,0 +1,59 @@
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeRise {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+  }
+
+  @keyframes shimmer {
+    0%   { opacity: 0.4; }
+    50%  { opacity: 0.8; }
+    100% { opacity: 0.4; }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+
+  .anim-fade-rise {
+    animation: fadeRise 200ms var(--ease-standard) both;
+  }
+  .anim-fade-in {
+    animation: fadeIn 200ms ease both;
+  }
+  .anim-shake {
+    animation: shake 300ms ease;
+  }
+
+  .skeleton {
+    background: var(--sunken);
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  .hero-headline-line { animation: fadeRise 400ms var(--ease-standard) both; }
+  .hero-sub           { animation: fadeRise 400ms var(--ease-standard) 200ms both; }
+  .hero-cta           { animation: fadeRise 500ms var(--ease-standard) 400ms both; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-delay: 0ms !important;
+  }
+}

@@ -1,0 +1,74 @@
+name = "opticontext"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KV NAMESPACES
+#
+# CRITICAL: Each binding MUST use a UNIQUE KV namespace ID in production.
+# The preview_id can be shared for local development (wrangler dev).
+#
+# Setup:
+#   1. Create 3 KV namespaces in Cloudflare Dashboard or via CLI:
+#      wrangler kv:namespace create "OPTICONTEXT_API_KEYS"
+#      wrangler kv:namespace create "OPTICONTEXT_RATE_LIMITS"
+#      wrangler kv:namespace create "OPTICONTEXT_CACHE"
+#   2. Replace each <REPLACE_ME> below with the returned production id.
+#   3. For local dev, set preview_id to a shared dev namespace id.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[kv_namespaces]]
+binding = "API_KEYS"
+id = "REPLACE_ME_API_KEYS_ID"
+preview_id = "280f0e6ef34a436ebfdcc3d0be674c04"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "REPLACE_ME_RATE_LIMITS_ID"
+preview_id = "280f0e6ef34a436ebfdcc3d0be674c04"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_ME_CACHE_ID"
+preview_id = "280f0e6ef34a436ebfdcc3d0be674c04"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# R2 BUCKETS
+# Create with: wrangler r2 bucket create opticontext-files
+#              wrangler r2 bucket create opticontext-tts
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[r2_buckets]]
+binding = "FILES_BUCKET"
+bucket_name = "opticontext-files"
+
+[[r2_buckets]]
+binding = "TTS_BUCKET"
+bucket_name = "opticontext-tts"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SECRETS
+# Set each with: wrangler secret put <SECRET_NAME>
+# Never commit actual secret values to version control.
+#
+# Required secrets:
+#   CEREBRAS_API_KEY    — from console.cerebras.ai
+#   GEMINI_API_KEY      — from aistudio.google.com/app/apikey
+#   TAVILY_API_KEY      — from tavily.com/dashboard
+#   APIFY_API_KEY       — from console.apify.com/account/integrations
+#   UNREAL_SPEECH_KEY   — from unrealspeech.com/dashboard
+#   TURSO_DB_URL        — from turso.tech (format: libsql://dbname-org.turso.io)
+#   TURSO_AUTH_TOKEN    — from turso.tech
+#   SUPABASE_URL        — from supabase.com/dashboard/project/settings/api
+#   SUPABASE_SERVICE_KEY — service_role key from Supabase
+#   ADMIN_SECRET        — generate with: openssl rand -hex 32
+#   FIREBASE_PROJECT_ID — your Firebase project ID
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEVELOPMENT OVERRIDES (wrangler dev only, not deployed)
+# ─────────────────────────────────────────────────────────────────────────────
+[dev]
+port = 8787
+local_protocol = "http"

@@ -1,0 +1,1 @@
+{"agent_id":"testagent","display_name":"Test Agent","allowed_tools":["intellisearch","voicebridge","deepdoc","memorycore"],"tier":"standard","rate_limits":{"requests_per_minute":60,"daily_cap":1000}}

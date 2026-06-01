@@ -20,17 +20,17 @@ compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
 binding = "API_KEYS"
-id = "REPLACE_ME_API_KEYS_ID"
+id = "4b1983d131124b2e85155546a9662d20"
 preview_id = "280f0e6ef34a436ebfdcc3d0be674c04"
 
 [[kv_namespaces]]
 binding = "RATE_LIMITS"
-id = "REPLACE_ME_RATE_LIMITS_ID"
+id = "d6a8ddc8e8a44843a6713dbc0e3ead02"
 preview_id = "280f0e6ef34a436ebfdcc3d0be674c04"
 
 [[kv_namespaces]]
 binding = "CACHE"
-id = "REPLACE_ME_CACHE_ID"
+id = "a75e7685eb884c6f8f1a95e9c6b56533"
 preview_id = "280f0e6ef34a436ebfdcc3d0be674c04"
 
 # ─────────────────────────────────────────────────────────────────────────────

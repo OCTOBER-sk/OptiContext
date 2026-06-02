@@ -3,7 +3,7 @@ import { getEnv } from "../context";
 function getAllowedOrigins(): string[] {
   const env = getEnv();
   const raw = (env as unknown as Record<string, string>).ALLOWED_ORIGINS;
-  if (!raw) return ["http://localhost:5173", "http://localhost:3000"];
+  if (!raw) return ["http://localhost:5173", "http://localhost:3000", "https://opticontext.pages.dev"];
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 

@@ -44,13 +44,13 @@ const ANALYZE = `
 **4 delivery methods (exactly one required):**
 1. \`file_url\` — public HTTPS URL (SSRF-protected: private IPs, localhost, metadata endpoints blocked; redirects validated)
 2. \`file_b64\` — base64 inline (<100MB; MIME type validated against allowlist)
-3. \`upload_id\` — from \`POST /upload\` (pre-upload, max 2GB)
+3. \`upload_id\` — from \`POST /upload\` (pre-upload, max 25 MB)
 4. \`file_id\` — from a previous analysis (re-analyze without re-uploading; files persist 30 days)
 **File persists after analysis.** Response always includes \`file_id\` — save it to re-analyze. Uploaded files auto-cleanup after 24 hours.
 **Supported formats:** 40+ types — PDF, DOCX, XLSX, CSV, TXT, MD, HTML, JSON, XML, PY, JS, TS, JAVA, GO, RS, PNG, JPG, WebP, GIF, MP3, WAV, MP4, ZIP, and more.
 **Core params:** \`query\` (be specific), \`model\` (\`auto\` recommended; \`flash\` for speed; \`pro\` for 2M-token context), \`output_format\` (\`structured\` JSON default; \`summary_only\`; \`markdown\`), \`save_to_memory\` (persists analysis to MemoryCore).
 **MIME validation:** MIME type must match supported formats. Extension-MIME mismatch logs a warning but doesn't block.
-**Max inline:** 100MB (\`file_b64\`). Max upload: 2GB (\`/upload\` endpoint). Analysis model: Gemini with auto-routing.`;
+**Max inline:** 100MB (\`file_b64\`). Max upload: 25 MB (\`/upload\` endpoint). Analysis model: Gemini with auto-routing.`;
 
 const MEMORY = `
 
@@ -87,13 +87,13 @@ const CONSTRAINTS = `
 | Endpoint | Max |
 |----------|-----|
 | JSON-RPC bodies | 1 MB |
-| File upload (/upload) | 2 GB |
+| File upload (/upload) | 25 MB |
 | Inline base64 (file_b64) | 100 MB |
 
 **SSRF protection:** \`file_url\` only accepts public HTTPS URLs. Private IPs, localhost, metadata endpoints (169.254.169.254), and non-HTTP(S) protocols are blocked. Single-hop redirects with target validation.
 **MIME validation:** uploaded/analyzed files must have a MIME type matching supported formats (PDF, images, audio, video, documents, code, archives). Rejected MIME types return a structured error.
 **Timeouts:** tool execution has a default timeout of 180 seconds. Configure via \`MCP_TOOL_TIMEOUT_MS\` env var or \`Mcp-Timeout\` request header (milliseconds). Timed-out calls return JSON-RPC error code -32002.
-**Budget guards:** Tavily (800 credits/month guard, 1,000 hard limit). Apify ($4.50 spend guard, $5.00 hard limit). Cerebras (1M tokens/day). Gemini Flash (1,500 req/day), Gemini Pro (50 req/day). Providers switch automatically before hard limits.
+**Budget guards:** Tavily (250 req/day). Apify ($4.50/month spend guard). Cerebras (1M tokens/day). Gemini Flash (1,500 req/day), Gemini Pro (50 req/day). Providers switch automatically before hard limits.
 
 Call \`tools/list\` for the complete machine-readable parameter schema for every tool.`;
 

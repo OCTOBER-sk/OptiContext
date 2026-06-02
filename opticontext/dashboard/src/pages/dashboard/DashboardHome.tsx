@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Copy, Plus } from 'lucide-react';
 import type { User } from 'firebase/auth';
@@ -40,41 +40,13 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
   const [newKeyCopied, setNewKeyCopied] = useState(false);
   const [showRevealOverlay, setShowRevealOverlay] = useState(false);
 
-  const clientNames = ['openclaw', 'hermes', 'antigravity', 'opencode', 'claude-code', 'cursor'];
-  const [placeholderText, setPlaceholderText] = useState('');
-  const placeholderIdx = useRef(0);
-  const placeholderCharIdx = useRef(0);
-  const placeholderDir = useRef(1);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const word = clientNames[placeholderIdx.current];
-      if (placeholderDir.current === 1) {
-        if (placeholderCharIdx.current < word.length) {
-          placeholderCharIdx.current++;
-          setPlaceholderText(word.slice(0, placeholderCharIdx.current));
-        } else {
-          placeholderDir.current = -1;
-        }
-      } else {
-        if (placeholderCharIdx.current > 0) {
-          placeholderCharIdx.current--;
-          setPlaceholderText(word.slice(0, placeholderCharIdx.current));
-        } else {
-          placeholderDir.current = 1;
-          placeholderIdx.current = (placeholderIdx.current + 1) % clientNames.length;
-          setPlaceholderText('');
-        }
-      }
-    }, 120);
-    return () => clearInterval(interval);
-  }, []);
+  const PLACEHOLDER_EXAMPLES = ['openclaw', 'hermes', 'antigravity', 'opencode', 'claude-code', 'cursor'];
 
   const validateKeyName = (name: string): string => {
     const trimmed = name.trim();
     if (!trimmed) return VALIDATION.keyName.empty;
     if (trimmed.length > 48) return VALIDATION.keyName.tooLong;
-    if (!/^[a-zA-Z0-9-]+$/.test(trimmed)) return VALIDATION.keyName.invalidChars;
+    if (!/^[a-z0-9_-]+$/.test(trimmed)) return VALIDATION.keyName.invalidChars;
     if (keys.some((k) => k.display_name === trimmed || k.agent_id === trimmed)) return VALIDATION.keyName.duplicate;
     return '';
   };
@@ -112,10 +84,12 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
     window.setTimeout(() => setter(false), 1500);
   };
 
+  const configMaskedKey = maskedKey || 'opctx_████████████████████████████████';
+
   const getConfigCode = (client: string) => {
     const cfg = CLIENT_CONFIGS[client];
     if (!cfg) return '';
-    return cfg.code.replaceAll('__MASKED_KEY__', 'opctx_████████████████████████████████');
+    return cfg.code.replaceAll('__MASKED_KEY__', configMaskedKey);
   };
 
   const currentConfig = getConfigCode(activeClient);
@@ -165,7 +139,7 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
                 type="text"
                 value={inlineKeyName}
                 onChange={(e) => { setInlineKeyName(e.target.value); setInlineKeyError(''); }}
-                placeholder={`e.g. ${placeholderText}`}
+                placeholder={`e.g. ${PLACEHOLDER_EXAMPLES[0]}`}
                 className={'input' + (inlineKeyError ? ' error' : '')}
                 onKeyDown={(e) => e.key === 'Enter' && createInlineKey()}
                 disabled={creatingInlineKey}

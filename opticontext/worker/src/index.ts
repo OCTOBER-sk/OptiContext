@@ -21,7 +21,7 @@ const WORKER_START_MS = Date.now();
 
 // ── Body size limits ──────────────────────────────────────────────────────────
 const MAX_JSON_BODY_BYTES = 1 * 1024 * 1024;      // 1 MB for JSON endpoints
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;   // 2 GB for file uploads
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;         // 25 MB for file uploads (staging)
 
 /**
  * Validates request body size against a limit before consuming the body.
@@ -176,9 +176,9 @@ async function handleUpload(request: Request): Promise<Response> {
 
     const file = fileField as unknown as File;
 
-    // 2 GB limit
-    if (file.size > 2 * 1024 * 1024 * 1024) {
-      return jsonResponse({ error: "File too large. Max 2GB." }, 413, request);
+    // 25 MB limit (staging)
+    if (file.size > 25 * 1024 * 1024) {
+      return jsonResponse({ error: "File too large. Max 25 MB." }, 413, request);
     }
 
     const safeName = sanitizeFilename(file.name);

@@ -1,6 +1,6 @@
 export const BUTTONS = {
   primary: {
-    getAgentKey: 'Login',
+    getAgentKey: 'Sign in',
     goToDashboard: 'Go to dashboard',
     createKey: 'Create key',
     copyKeyRevealed: 'Copy key',

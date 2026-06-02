@@ -70,7 +70,7 @@ export default function Settings({ user }: SettingsProps) {
     const trimmed = name.trim();
     if (!trimmed) return VALIDATION.keyName.empty;
     if (trimmed.length > 48) return VALIDATION.keyName.tooLong;
-    if (!/^[a-zA-Z0-9-]+$/.test(trimmed)) return VALIDATION.keyName.invalidChars;
+    if (!/^[a-z0-9_-]+$/.test(trimmed)) return VALIDATION.keyName.invalidChars;
     if (keys.some((k) => k.display_name === trimmed || k.agent_id === trimmed)) return VALIDATION.keyName.duplicate;
     return '';
   };
@@ -103,7 +103,7 @@ export default function Settings({ user }: SettingsProps) {
     const trimmed = name.trim();
     if (!trimmed) return VALIDATION.inlineRename.empty;
     if (trimmed.length > 48) return VALIDATION.inlineRename.tooLong;
-    if (!/^[a-zA-Z0-9-]+$/.test(trimmed)) return VALIDATION.inlineRename.invalidChars;
+    if (!/^[a-z0-9_-]+$/.test(trimmed)) return VALIDATION.inlineRename.invalidChars;
     if (keys.some((k) => k.display_name === trimmed)) return VALIDATION.inlineRename.duplicate;
     return '';
   };
@@ -162,8 +162,7 @@ export default function Settings({ user }: SettingsProps) {
     setSavingThreshold(true);
     setTimeout(() => {
       setSavingThreshold(false);
-      setComingSoonMsg(true);
-      window.setTimeout(() => setComingSoonMsg(false), 3000);
+      setThresholdSaved(true);
     }, 300);
   };
 
@@ -179,6 +178,7 @@ export default function Settings({ user }: SettingsProps) {
     setTimeout(() => {
       setWebhookSaved(true);
       setSavingWebhook(false);
+      setComingSoonMsg(true);
     }, 500);
   };
 
@@ -187,7 +187,6 @@ export default function Settings({ user }: SettingsProps) {
     setTimeout(() => {
       setSendingTest(false);
       setTestSent(true);
-      window.setTimeout(() => setTestSent(false), 3000);
     }, 600);
   };
 
@@ -477,7 +476,7 @@ export default function Settings({ user }: SettingsProps) {
           )}
           {thresholdSaved && (
             <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 6, animation: 'fadeIn 200ms ease both' }}>
-              {CONFIRMATIONS.saved}
+              Settings recorded locally. Backend connection is not yet available.
             </p>
           )}
         </div>
@@ -532,7 +531,12 @@ export default function Settings({ user }: SettingsProps) {
           <button onClick={handleSaveWebhook} className="btn btn-secondary" disabled={savingWebhook} style={{ opacity: savingWebhook ? 0.65 : 1 }}>
             {savingWebhook ? LOADING.saving : BUTTONS.primary.saveWebhook}
           </button>
-          {webhookSaved && <StatusChip status="webhook-connected" label={OPERATIONAL.webhookConnected} />}
+          {webhookSaved && !comingSoonMsg && <StatusChip status="webhook-connected" label={OPERATIONAL.webhookConnected} />}
+          {comingSoonMsg && (
+            <span style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-muted)', animation: 'fadeIn 200ms ease both' }}>
+              Settings recorded locally. Telegram alert backend is not yet connected.
+            </span>
+          )}
           <button
             onClick={handleTestMessage}
             className="btn btn-ghost"
@@ -552,7 +556,7 @@ export default function Settings({ user }: SettingsProps) {
 
         {testSent && (
           <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: 8, animation: 'fadeIn 200ms ease both' }}>
-            {CONFIRMATIONS.testMessageSent}
+            Simulated locally — not sent to Telegram.
           </p>
         )}
         <Link to="/docs/troubleshooting" style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', marginTop: 8 }}>

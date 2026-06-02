@@ -72,6 +72,8 @@ export function useUsageData(agentId: string | null): UsageState & { refetch: ()
         capAggregate[capName].tokens += toolTokens;
       }
 
+      const DEFAULT_DAILY_CAP = 500;
+
       const capabilities = Object.entries(CAPABILITY_CONFIGS).map(([name, cfg]) => {
         const agg = capAggregate[name] ?? { count: 0, tokens: 0 };
         const count = agg.count;
@@ -79,6 +81,10 @@ export function useUsageData(agentId: string | null): UsageState & { refetch: ()
         let status: CapabilityUsage['status'] = count === 0 ? 'no-activity' : 'active';
 
         const telemetry: { label: string; value: string; tooltip?: string }[] = [];
+
+        if (count > 0 && agg.tokens > 0) {
+          telemetry.push({ label: 'Tokens used', value: agg.tokens.toLocaleString(), tooltip: 'Total token consumption for this capability across all calls today' });
+        }
 
         let statusTooltip: string | undefined;
         if (status === 'active') statusTooltip = 'This capability received calls in the last 24 hours';
@@ -88,9 +94,10 @@ export function useUsageData(agentId: string | null): UsageState & { refetch: ()
       });
 
       const today = data.today_requests ?? capabilities.reduce((s, c) => s + c.count, 0);
-      const month = data.monthly_requests ?? today * 22;
+      const month = data.monthly_requests ?? today;
+      const capPercent = Math.min(100, Math.round((today / DEFAULT_DAILY_CAP) * 100));
 
-      setState({ capabilities, totalToday: today, totalMonth: month, dailyCapPercent: 0, loading: false, error: null });
+      setState({ capabilities, totalToday: today, totalMonth: month, dailyCapPercent: capPercent, loading: false, error: null });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Usage data unavailable';
       setState((prev) => ({ ...prev, loading: false, error: message }));

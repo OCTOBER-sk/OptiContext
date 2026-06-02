@@ -5,8 +5,7 @@ import { kv } from "../storage/kv";
 import { providerFetch, safeJson } from "../utils/safe-fetch";
 
 const TAVILY_API_BASE = "https://api.tavily.com";
-const MAX_CREDITS = 1000;
-const BUDGET_GUARD = 800;
+const DAILY_REQUEST_LIMIT = 250;
 
 interface TavilySearchResult {
   title: string;
@@ -24,30 +23,32 @@ interface TavilyResponse {
 }
 
 /**
- * Budget guard: tracked in KV so it survives across Worker instances.
- * Key: tavily_credits:<YYYY-MM> → current credits used this month
+ * Daily budget guard: tracked in KV so it survives across Worker instances.
+ * Key: tavily_requests:<YYYY-MM-DD> → requests used today
  *
- * Returns whether the call is allowed. Does NOT deduct yet —
- * call deductTavilyBudget() only after a successful API response.
+ * Throws ProviderError if the daily limit has been reached.
+ * Does NOT increment yet — call deductTavilyBudget() only after a successful API response.
  */
-async function checkTavilyBudget(creditCost: number): Promise<boolean> {
-  const month = new Date().toISOString().slice(0, 7);
-  const key = `tavily_credits:${month}`;
+async function checkTavilyBudget(creditCost: number): Promise<void> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `tavily_requests:${date}`;
   const used = parseInt((await kv.get("CACHE", key)) ?? "0", 10);
-  if (used + creditCost > BUDGET_GUARD) {
-    logger.warn("[Tavily] Monthly budget guard triggered", { used, limit: BUDGET_GUARD });
-    return false;
+  if (used + creditCost > DAILY_REQUEST_LIMIT) {
+    logger.warn("[Tavily] Daily request budget exceeded", { used, limit: DAILY_REQUEST_LIMIT });
+    throw new ProviderError(
+      `Tavily daily request budget (${DAILY_REQUEST_LIMIT}) exceeded. Try again tomorrow or use fast/auto mode which routes to DuckDuckGo (free, no budget).`,
+      "tavily",
+      429,
+    );
   }
-  return true;
 }
 
 async function deductTavilyBudget(creditCost: number): Promise<void> {
-  const month = new Date().toISOString().slice(0, 7);
-  const key = `tavily_credits:${month}`;
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `tavily_requests:${date}`;
   const used = parseInt((await kv.get("CACHE", key)) ?? "0", 10);
   await kv.put("CACHE", key, (used + creditCost).toString(), {
-    // TTL: 35 days to cover month boundary
-    expirationTtl: 35 * 24 * 3600,
+    expirationTtl: 86400,
   });
 }
 
@@ -69,10 +70,7 @@ export async function search(
   const searchDepth = options.search_depth ?? "basic";
   const creditCost = searchDepth === "advanced" ? 2 : 1;
 
-  const allowed = await checkTavilyBudget(creditCost);
-  if (!allowed) {
-    return { results: [], creditsUsed: 0, provider: "tavily" };
-  }
+  await checkTavilyBudget(creditCost);
 
   try {
     const { response, error: fetchError } = await providerFetch(

@@ -2,7 +2,7 @@ export const VALIDATION = {
   keyName: {
     empty: 'A key name is required.',
     tooLong: 'Key name must be 48 characters or fewer.',
-    invalidChars: 'Key name may only contain letters, numbers, and hyphens.',
+    invalidChars: 'Key name may only contain lowercase letters, numbers, hyphens, and underscores.',
     startsWithHyphen: 'Key name must start with a letter or number.',
     duplicate: 'A key with this name already exists. Choose a different name.',
     reserved: 'This name is reserved. Choose a different name.',
@@ -11,7 +11,7 @@ export const VALIDATION = {
     empty: 'A key name is required.',
     duplicate: 'A key with this name already exists.',
     tooLong: 'Key name must be 48 characters or fewer.',
-    invalidChars: 'Letters, numbers, and hyphens only.',
+    invalidChars: 'Lowercase letters, numbers, hyphens, and underscores only.',
   },
   threshold: {
     empty: 'A threshold is required.',

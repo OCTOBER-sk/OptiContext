@@ -310,7 +310,16 @@ export const turso = {
          GROUP BY ar.agent_id
          ORDER BY ar.created_at DESC`;
     const rows = await query(sql, [owner_email]);
-    return rows as unknown as AgentRegistry[];
+    return rows.map((r) => {
+      const parsed = r as unknown as Record<string, unknown>;
+      if (typeof parsed.allowed_tools === "string") {
+        try { parsed.allowed_tools = JSON.parse(parsed.allowed_tools as string); } catch { parsed.allowed_tools = []; }
+      }
+      if (typeof parsed.settings === "string") {
+        try { parsed.settings = JSON.parse(parsed.settings as string); } catch { parsed.settings = {}; }
+      }
+      return parsed as unknown as AgentRegistry;
+    }) as unknown as AgentRegistry[];
   },
 
   async agentBelongsToOwner(agent_id: string, owner_email: string): Promise<boolean> {

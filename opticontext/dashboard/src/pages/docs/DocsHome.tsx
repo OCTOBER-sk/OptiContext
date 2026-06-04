@@ -118,7 +118,7 @@ export default function DocsHome() {
       {/* ── Page Header ── */}
       <motion.div {...fadeUp}>
         <p className="breadcrumb" style={{ marginBottom: 8 }}>Documentation</p>
-        <h1 className="page-h1" style={{ marginBottom: 8, fontSize: '2.25rem' }}>
+        <h1 className="page-h1" style={{ marginBottom: 8, fontSize: 'clamp(1.75rem, 4vw, 2.25rem)' }}>
           OptiContext Documentation
         </h1>
         <p className="page-desc">

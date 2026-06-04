@@ -52,10 +52,10 @@ export function HowItWorks() {
           style={{
             fontFamily: "'Zodiak', Georgia, serif",
             fontWeight: 400,
-            fontSize: '2.25rem',
+            fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
             color: 'var(--text-primary)',
             textAlign: 'center',
-            marginBottom: 64,
+            marginBottom: 'clamp(2rem, 5vw, 4rem)',
           }}
         >
           How it works

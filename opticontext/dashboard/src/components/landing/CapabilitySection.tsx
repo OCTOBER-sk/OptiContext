@@ -61,7 +61,7 @@ export function CapabilitySection() {
           style={{
             fontFamily: "'Zodiak', Georgia, serif",
             fontWeight: 400,
-            fontSize: '2.25rem',
+            fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
             color: 'var(--text-primary)',
             textAlign: 'center',
             marginBottom: 8,
@@ -73,11 +73,11 @@ export function CapabilitySection() {
           style={{
             fontFamily: "'Switzer', Inter, system-ui, sans-serif",
             fontWeight: 400,
-            fontSize: '1.125rem',
+            fontSize: 'clamp(0.9375rem, 2vw, 1.125rem)',
             color: 'var(--text-secondary)',
             textAlign: 'center',
             maxWidth: 480,
-            margin: '0 auto 64px',
+            margin: '0 auto clamp(2rem, 5vw, 4rem)',
           }}
         >
           Connect once. Every capability is immediately available to your runtime.

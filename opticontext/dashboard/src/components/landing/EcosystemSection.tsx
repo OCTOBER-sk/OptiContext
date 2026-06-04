@@ -44,7 +44,7 @@ export function EcosystemSection() {
           style={{
             fontFamily: "'Zodiak', Georgia, serif",
             fontWeight: 400,
-            fontSize: '2.25rem',
+            fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
             color: 'var(--text-primary)',
             textAlign: 'center',
             marginBottom: 12,

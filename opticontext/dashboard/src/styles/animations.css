@@ -40,6 +40,20 @@
     animation: shake 300ms ease;
   }
 
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  @keyframes typeIn {
+    0% { opacity: 0; transform: translateY(2px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .mcp-line {
+    animation: typeIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
   .skeleton {
     background: var(--sunken);
     animation: shimmer 1.4s ease-in-out infinite;
@@ -48,6 +62,10 @@
   .hero-headline-line { animation: fadeRise 400ms var(--ease-standard) both; }
   .hero-sub           { animation: fadeRise 400ms var(--ease-standard) 200ms both; }
   .hero-cta           { animation: fadeRise 500ms var(--ease-standard) 400ms both; }
+
+  .hero-code { animation: fadeRise 600ms var(--ease-standard) 500ms both; }
+  .hero-trust { animation: fadeRise 500ms var(--ease-standard) 600ms both; }
+  .hero-eyebrow { animation: fadeRise 400ms var(--ease-standard) 80ms both; }
 }
 
 @media (prefers-reduced-motion: reduce) {

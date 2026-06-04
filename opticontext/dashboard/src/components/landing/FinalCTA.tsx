@@ -41,7 +41,7 @@ export function FinalCTA() {
           style={{
             fontFamily: "'Zodiak', Georgia, serif",
             fontWeight: 400,
-            fontSize: '2.25rem',
+            fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
             color: 'var(--text-primary)',
             marginBottom: 16,
           }}

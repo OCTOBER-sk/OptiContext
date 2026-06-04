@@ -194,7 +194,7 @@ export default function Troubleshooting() {
           style={{
             fontFamily: "'Zodiak', Georgia, serif",
             fontWeight: 400,
-            fontSize: '2.25rem',
+            fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
             color: 'var(--text-primary)',
             marginBottom: 8,
           }}

@@ -437,6 +437,28 @@ code, pre, kbd, samp, .font-mono {
   .docs-sidebar { display: none; }
   .app-body { flex-direction: column; }
 }
+@media (max-width: 380px) {
+  :root {
+    --header-height: 56px;
+  }
+  html { font-size: 15px; }
+  .btn { padding: 8px 14px; font-size: 0.8125rem; }
+  .btn-lg { padding: 10px 18px; font-size: 0.9375rem; }
+  .hero-trust { flex-direction: column; gap: 6px !important; }
+  .hero-trust span[style*="width: 1px"] { display: none; }
+  .mcp-terminal { border-radius: 6px !important; font-size: 0.75rem !important; }
+  .mcp-terminal > div:last-child { flex-direction: column; align-items: flex-start !important; gap: 2px !important; }
+  .landing-footer-inner { gap: 8px; }
+  .landing-tools-grid { gap: 16px !important; }
+  .code-block { padding: 10px 12px !important; font-size: 0.8125rem !important; }
+  .card { padding: 16px !important; }
+  .docs-sidebar { width: 220px !important; }
+  .pag-h1 { font-size: 1.75rem !important; }
+  .page-desc { font-size: 0.9375rem !important; }
+  .breadcrumb { font-size: 0.75rem !important; }
+  .quickstart-page { padding: 0; }
+  nav[style*="position: sticky"] { padding: 0 1rem !important; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -514,12 +536,15 @@ code, pre, kbd, samp, .font-mono {
   .quickstart-panel {
     display: none;
   }
+}
+@media (max-width: 1023px) {
   .landing-tools-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px !important;
   }
   .how-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 32px !important;
+    gap: 28px !important;
   }
 }
 
@@ -556,6 +581,7 @@ code, pre, kbd, samp, .font-mono {
     width: 260px;
     z-index: 80;
     box-shadow: 12px 0 32px rgba(26, 26, 24, 0.12);
+    overflow-y: auto;
   }
   .mobile-dashboard-nav {
     display: flex;
@@ -592,6 +618,12 @@ code, pre, kbd, samp, .font-mono {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .data-table tbody td,
+  .data-table thead th {
+    padding: 8px 10px !important;
+    font-size: 0.8125rem !important;
   }
 }
 
@@ -624,7 +656,7 @@ code, pre, kbd, samp, .font-mono {
 .page-h1 {
   font-family: 'Zodiak', Georgia, serif;
   font-weight: 400;
-  font-size: 3rem;
+  font-size: clamp(1.75rem, 5vw, 3rem);
   color: var(--text-primary);
   margin-bottom: 8px;
 }
@@ -632,7 +664,7 @@ code, pre, kbd, samp, .font-mono {
 .page-desc {
   font-family: 'Switzer', Inter, system-ui, sans-serif;
   font-weight: 400;
-  font-size: 1.125rem;
+  font-size: clamp(0.9375rem, 2vw, 1.125rem);
   color: var(--text-secondary);
   margin-bottom: 32px;
   margin-top: 8px;

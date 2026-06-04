@@ -114,8 +114,9 @@ export function LandingNav() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 32,
+            gap: 24,
             zIndex: 100,
+            padding: '0 1.5rem',
           }}
         >
           {NAV_LINKS.map((link) => (
@@ -126,18 +127,19 @@ export function LandingNav() {
               style={{
                 fontFamily: "'Zodiak', Georgia, serif",
                 fontWeight: 400,
-                fontSize: '1.5rem',
+                fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
                 color: 'var(--text-primary)',
                 textDecoration: 'none',
+                padding: '8px 0',
               }}
             >
               {link.label}
             </Link>
           ))}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16, width: '100%', maxWidth: 240 }}>
             <button
               className="btn btn-primary btn-lg"
-              style={{ width: 200 }}
+              style={{ width: '100%' }}
               onClick={() => { setMobileOpen(false); navigate(user ? '/dashboard' : '/auth'); }}
             >
           {user ? BUTTONS.primary.goToDashboard : BUTTONS.primary.getAgentKey}

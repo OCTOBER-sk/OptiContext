@@ -139,7 +139,7 @@ export function DocsLayout() {
           <button
             aria-label="Close docs navigation"
             onClick={() => setMobileOpen(false)}
-            style={{ position: 'fixed', inset: '64px 0 0 260px', zIndex: 70, background: 'rgba(26,26,24,0.16)', border: 'none' }}
+            style={{ position: 'fixed', inset: '64px 0 0 0', zIndex: 70, background: 'rgba(26,26,24,0.16)', border: 'none', cursor: 'default' }}
           />
         )}
         <main
@@ -147,8 +147,11 @@ export function DocsLayout() {
           className="bg-grid-layer"
           style={{
             flex: 1,
-            padding: '48px clamp(2rem, 5vw, 4rem)',
+            padding: 'clamp(1.5rem, 5vw, 4rem)',
+            paddingTop: 48,
             maxWidth: 980,
+            width: '100%',
+            minWidth: 0,
           }}
         >
           <button className="btn btn-secondary mobile-docs-toggle" onClick={() => setMobileOpen(!mobileOpen)}>

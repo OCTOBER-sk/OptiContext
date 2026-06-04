@@ -196,7 +196,7 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
       <>
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
-          <h1 style={{ fontFamily: "'Zodiak', Georgia, serif", fontWeight: 400, fontSize: '1.75rem', color: 'var(--text-primary)', margin: 0 }}>
+          <h1 style={{ fontFamily: "'Zodiak', Georgia, serif", fontWeight: 400, fontSize: 'clamp(1.375rem, 3vw, 1.75rem)', color: 'var(--text-primary)', margin: 0 }}>
             Your MCP endpoint
           </h1>
           <Tooltip content={healthTooltip}>
@@ -206,7 +206,7 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
           </Tooltip>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 10 }} className="dashboard-copy-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 10 }} className="dashboard-copy-grid">
           <div style={{ background: 'var(--sunken)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ minWidth: 0 }}>
               <span style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontWeight: 600, fontSize: '0.6875rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>

@@ -114,9 +114,12 @@ export function AppLayout({ user }: AppLayoutProps) {
           className="bg-grid-layer"
           style={{
             flex: 1,
-            padding: '32px clamp(1.5rem, 5vw, 6rem)',
+            padding: 'clamp(1rem, 3vw, 2rem)',
+            paddingTop: 32,
             maxWidth: 1120,
             width: '100%',
+            minWidth: 0,
+            overflowX: 'hidden',
           }}
         >
           <Outlet />

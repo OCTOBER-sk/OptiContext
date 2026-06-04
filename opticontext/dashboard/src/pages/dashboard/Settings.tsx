@@ -193,7 +193,7 @@ export default function Settings({ user }: SettingsProps) {
 
   return (
     <div>
-      <h1 style={{ fontFamily: "'Zodiak', Georgia, serif", fontWeight: 400, fontSize: '2.25rem', color: 'var(--text-primary)', marginBottom: 32 }}>
+      <h1 style={{ fontFamily: "'Zodiak', Georgia, serif", fontWeight: 400, fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', color: 'var(--text-primary)', marginBottom: 32 }}>
         Settings
       </h1>
 

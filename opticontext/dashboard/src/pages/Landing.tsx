@@ -9,7 +9,7 @@ import { Footer } from '../components/landing/Footer';
 
 export default function Landing() {
   return (
-    <main>
+    <main style={{ animation: 'fadeIn 300ms ease both' }}>
       <HeroSection />
       <CapabilitySection />
       <HowItWorks />

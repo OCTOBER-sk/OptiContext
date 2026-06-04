@@ -46,10 +46,10 @@ export function TrustBlock() {
           style={{
             fontFamily: "'Zodiak', Georgia, serif",
             fontWeight: 400,
-            fontSize: '1.75rem',
+            fontSize: 'clamp(1.5rem, 4vw, 1.75rem)',
             color: 'var(--text-primary)',
             textAlign: 'center',
-            marginBottom: 64,
+            marginBottom: 'clamp(2rem, 5vw, 4rem)',
           }}
         >
           Built for production. Free forever.

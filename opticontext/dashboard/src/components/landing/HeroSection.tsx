@@ -3,23 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, toAuthUser } from '../../lib/supabase';
 import type { AuthUser } from '../../lib/supabase';
 import { BUTTONS, CONFIRMATIONS } from '../../lib/microcopy';
-
-const CONFIG_JSON = `{
-  "mcpServers": {
-    "opticontext": {
-      "url": "https://mcp.opticontext.dev/mcp",
-      "transport": "streamable-http",
-      "headers": {
-        "Authorization": "Bearer YOUR_AGENT_KEY"
-      }
-    }
-  }
-}`;
+import { McpTerminal } from './McpTerminal';
 
 export function HeroSection() {
   const [visible, setVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const navigate = useNavigate();
 
@@ -42,12 +30,6 @@ export function HeroSection() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(CONFIG_JSON);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
 
   return (
     <section
@@ -138,11 +120,12 @@ export function HeroSection() {
           style={{
             fontFamily: "'Switzer', Inter, system-ui, sans-serif",
             fontWeight: 400,
-            fontSize: '1.125rem',
+            fontSize: 'clamp(0.9375rem, 2.5vw, 1.125rem)',
             color: 'var(--text-secondary)',
             lineHeight: 1.6,
             maxWidth: 560,
             marginBottom: 32,
+            padding: '0 clamp(0.5rem, 2vw, 0)',
           }}
         >
           OptiContext is a production MCP server deployed on a global edge network.
@@ -177,19 +160,21 @@ export function HeroSection() {
           className="hero-trust"
           style={{
             display: 'flex',
-            gap: 16,
+            gap: 12,
             marginTop: 24,
             fontFamily: "'Switzer', Inter, system-ui, sans-serif",
             fontWeight: 400,
             fontSize: '0.875rem',
             color: 'var(--text-muted)',
             alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
           }}
         >
           <span>Edge-deployed · 300+ PoPs</span>
-          <span style={{ width: 1, height: 12, background: 'var(--border)' }} />
+          <span style={{ width: 1, height: 12, background: 'var(--border)' }} aria-hidden="true" />
           <span>Sub-5ms cold starts</span>
-          <span style={{ width: 1, height: 12, background: 'var(--border)' }} />
+          <span style={{ width: 1, height: 12, background: 'var(--border)' }} aria-hidden="true" />
           <span>Zero infrastructure cost</span>
         </div>
 
@@ -198,63 +183,11 @@ export function HeroSection() {
           style={{
             marginTop: 48,
             width: '100%',
-            maxWidth: 520,
+            display: 'flex',
+            justifyContent: 'center',
           }}
         >
-          <div className="code-block" style={{ position: 'relative' }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12,
-                paddingBottom: 8,
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.75rem',
-                  color: 'var(--code-muted)',
-                }}
-              >
-                mcp.config.json
-              </span>
-              <button
-                className="copy-button"
-                style={{ position: 'static', opacity: 1 }}
-                onClick={handleCopy}
-                aria-label="Copy config"
-              >
-                {copied ? CONFIRMATIONS.copied : 'Copy'}
-              </button>
-            </div>
-            <pre style={{ margin: 0, overflow: 'auto', textAlign: 'left' }}>
-              <code>
-                <span style={{ color: 'var(--code-muted)' }}>{'{'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'  "mcpServers": {'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'    "opticontext": {'}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'      "url"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"https://mcp.opticontext.dev/mcp"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'      "transport"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"streamable-http"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'      "headers"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': {'}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'        "Authorization"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"Bearer YOUR_AGENT_KEY"'}</span>{'\n'}
-                <span style={{ color: 'var(--code-text)' }}>{'      }'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'    }'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'  }'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'}'}</span>
-              </code>
-            </pre>
-          </div>
+          <McpTerminal />
         </div>
       </div>
 

@@ -103,7 +103,7 @@ export default function Auth() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: 48,
+          padding: 'clamp(1.5rem, 5vw, 3rem)',
           background: 'var(--base)',
         }}
       >

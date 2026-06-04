@@ -570,7 +570,7 @@ const getRightPanelStep = () => {
           style={{
             fontFamily: "'Zodiak', serif",
             fontWeight: 400,
-            fontSize: '2.25rem',
+            fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
             color: 'var(--text-primary)',
             marginBottom: 8,
           }}
@@ -605,7 +605,7 @@ const getRightPanelStep = () => {
           All four capabilities are available immediately after configuration.
         </p>
 
-        <div className="tab-bar" style={{ marginBottom: 48, overflowX: 'auto' }}>
+        <div className="tab-bar" style={{ marginBottom: 48, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {CLIENTS.map((client) => (
             <button
               key={client}

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, toAuthUser } from '../../lib/supabase';
 import type { AuthUser } from '../../lib/supabase';
 import { BUTTONS, CONFIRMATIONS } from '../../lib/microcopy';
-import { McpTerminal } from './McpTerminal';
 
 export function HeroSection() {
   const [visible, setVisible] = useState(false);
@@ -176,18 +175,6 @@ export function HeroSection() {
           <span>Sub-5ms cold starts</span>
           <span style={{ width: 1, height: 12, background: 'var(--border)' }} aria-hidden="true" />
           <span>Zero infrastructure cost</span>
-        </div>
-
-        <div
-          className="hero-code"
-          style={{
-            marginTop: 48,
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <McpTerminal />
         </div>
       </div>
 

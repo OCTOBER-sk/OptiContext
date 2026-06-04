@@ -1,265 +1,192 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Copy, Check } from 'lucide-react';
+import { CLIENT_CONFIGS, CLIENT_NAMES } from '../../lib/runtime-config';
 
-interface ToolDef {
-  name: string;
-  description: string;
-  config: object;
-  badge?: string;
+/* ── Simple JSON syntax highlighter (no external dep) ── */
+function highlightJson(text: string): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  let i = 0;
+  let key = 0;
+
+  while (i < text.length) {
+    const ch = text[i];
+
+    // String
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < text.length && text[j] !== '"') {
+        if (text[j] === '\\') j += 2; else j++;
+      }
+      const str = text.slice(i, j + 1);
+      const isKey = text[j + 1] === ':' || text[j + 1]?.trim() === ':';
+      out.push(
+        <span
+          key={key++}
+          style={{
+            color: isKey ? '#5EC99A' : '#D4A76A',
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
+        >
+          {str}
+        </span>
+      );
+      i = j + 1;
+      continue;
+    }
+
+    // Number / boolean / null
+    if (/[0-9\-]/.test(ch) || text.slice(i, i + 4) === 'true' || text.slice(i, i + 5) === 'false' || text.slice(i, i + 4) === 'null') {
+      const m = text.slice(i).match(/^(true|false|null|[\-0-9]+(?:\.?[0-9]+)?)/);
+      if (m) {
+        out.push(
+          <span key={key++} style={{ color: '#E8E4DC', fontFamily: "'JetBrains Mono', monospace" }}>{m[0]}</span>
+        );
+        i += m[0].length;
+        continue;
+      }
+    }
+
+    // Punctuation / whitespace — raw
+    out.push(
+      <span key={key++} style={{ color: '#8A9BA8', fontFamily: "'JetBrains Mono', monospace" }}>{ch}</span>
+    );
+    i++;
+  }
+  return out;
 }
 
-const TOOLS: ToolDef[] = [
-  {
-    name: "opticontext_search",
-    description: "Web search with 4 modes (auto/research/fast/scrape), AI summarization, Google dork support, and multi-provider fallback.",
-    badge: "Web Search",
-    config: {
-      name: "opticontext_search",
-      arguments: {
-        query: "natural language search query",
-        mode: "auto",
-        max_results: 5,
-        summarize: true,
-        dork: {
-          site_filter: "github.com",
-          file_type: "pdf",
-          date_after: "2025-01-01",
-          date_before: "2025-06-01",
-          exclude_terms: ["sponsored", "ad"],
-          include_phrases: ["security advisory"],
-          search_in: "url"
-        }
-      }
-    }
-  },
-  {
-    name: "opticontext_tts",
-    description: "Text-to-speech via Unreal Speech — 48 voices, 5 audio formats, 4 platform optimizations, streaming support. Auto-chunks text over 2,900 chars.",
-    badge: "Voice Synthesis",
-    config: {
-      name: "opticontext_tts",
-      arguments: {
-        text: "string up to 30,000 chars",
-        voice: "Scarlett",
-        speed: 1.0,
-        format: "mp3",
-        platform: "raw",
-        stream: false
-      }
-    }
-  },
-  {
-    name: "opticontext_analyze",
-    description: "Deep file analysis via Gemini 2M-token context window — 4 intake methods, 40+ formats, 3 output modes. One-shot or re-analyze with file_id.",
-    badge: "File Analysis",
-    config: {
-      name: "opticontext_analyze",
-      arguments: {
-        query: "Your analysis question",
-        file_url: "https://arxiv.org/pdf/2401.12345.pdf",
-        mime_type: "application/pdf",
-        model: "auto",
-        output_format: "structured",
-        save_to_memory: false,
-        max_tokens: 4096
-      }
-    }
-  },
-  {
-    name: "opticontext_memory_write",
-    description: "Persistent vector memory — namespaced, importance-scored (1-10), auto-summmarized above 8K chars. Embedded via Gemini embedding-2 (768d).",
-    badge: "Memory",
-    config: {
-      name: "opticontext_memory_write",
-      arguments: {
-        content: "Fact to remember across sessions",
-        namespace: "general",
-        importance: 5,
-        source: "user"
-      }
-    }
-  },
-  {
-    name: "opticontext_memory_search",
-    description: "Semantic similarity search across stored memories — cosine similarity, AI rerank, namespace-scoped retrieval with configurable thresholds.",
-    badge: "Memory",
-    config: {
-      name: "opticontext_memory_search",
-      arguments: {
-        query: "What were the user's preferences?",
-        namespace: "general",
-        top_k: 5,
-        min_similarity: 0.5,
-        rerank: false
-      }
-    }
-  },
-  {
-    name: "opticontext_guide",
-    description: "Self-orientation guide — returns a compact capability reference. Call first on connect to discover tools, constraints, and best practices.",
-    badge: "Guide",
-    config: {
-      name: "opticontext_guide",
-      arguments: {
-        topic: "all"
-      }
-    }
-  },
-];
+/* ── Component ── */
+export function McpTerminal() {
+  const [idx, setIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
 
-function ToolCard({ tool, defaultOpen }: { tool: ToolDef; defaultOpen: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const names = CLIENT_NAMES;
+  const currentName = names[idx];
+  const currentCfg = CLIENT_CONFIGS[currentName];
+
+  const next = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => {
+      setIdx((i) => (i + 1) % names.length);
+      setVisible(true);
+    }, 400); // half of the transition duration
+  }, [names.length]);
+
+  useEffect(() => {
+    const id = setInterval(next, 5000);
+    return () => clearInterval(id);
+  }, [next]);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(currentCfg.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
-    <div style={{
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-    }}>
-      <button
-        onClick={() => setOpen(!open)}
+    <div
+      style={{
+        width: '100%',
+        maxWidth: 640,
+        background: 'var(--code-surface)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 8,
+        overflow: 'hidden',
+        fontFamily: "'Switzer', Inter, system-ui, sans-serif",
+      }}
+    >
+      {/* Header */}
+      <div
         style={{
-          width: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 12,
-          padding: '14px 20px',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--code-text)',
-          fontFamily: "'Switzer', Inter, system-ui, sans-serif",
-          fontSize: '0.875rem',
-          textAlign: 'left',
-          transition: 'background 150ms',
+          padding: '10px 16px 10px 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(0,0,0,0.15)',
         }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <code style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '0.8125rem',
-            color: 'var(--code-accent)',
-            whiteSpace: 'nowrap',
-          }}>
-            {tool.name}
-          </code>
-          {tool.badge && (
-            <span style={{
-              fontFamily: "'Switzer', Inter, system-ui, sans-serif",
-              fontSize: '0.625rem',
-              fontWeight: 500,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              color: 'rgba(94, 201, 154, 0.7)',
-              background: 'rgba(94, 201, 154, 0.08)',
-              padding: '2px 8px',
-              borderRadius: 4,
-              whiteSpace: 'nowrap',
-            }}>
-              {tool.badge}
-            </span>
-          )}
-        </div>
-        <span style={{
-          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 200ms',
-          opacity: 0.4,
-          flexShrink: 0,
-        }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <path d="M3 5L6 8L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </span>
-      </button>
-      {open && (
-        <div style={{ padding: '0 20px 16px' }}>
-          <p style={{
-            fontFamily: "'Switzer', Inter, system-ui, sans-serif",
-            fontSize: '0.8125rem',
-            color: 'rgba(232, 228, 220, 0.65)',
-            lineHeight: 1.5,
-            margin: '0 0 12px',
-          }}>
-            {tool.description}
-          </p>
-          <pre style={{
-            margin: 0,
-            padding: '12px 16px',
-            background: 'rgba(0,0,0,0.25)',
-            borderRadius: 6,
+        <span
+          style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '0.75rem',
-            lineHeight: 1.6,
+            color: 'var(--code-muted)',
+            transition: 'opacity 400ms ease',
+            opacity: visible ? 1 : 0.3,
+          }}
+        >
+          {currentCfg.file}
+        </span>
+        <button
+          onClick={handleCopy}
+          style={{
+            background: 'rgba(28,28,26,0.8)',
+            color: copied ? '#5EC99A' : 'var(--code-text)',
+            border: 'none',
+            borderRadius: 4,
+            padding: '4px 8px',
+            fontFamily: "'Switzer', sans-serif",
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            opacity: copied ? 1 : 0.7,
+            transition: 'opacity 150ms, color 150ms',
+          }}
+        >
+          {copied ? <Check size={12} /> : <Copy size={12} />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+
+      {/* Code body */}
+      <div
+        style={{
+          position: 'relative',
+          minHeight: 260,
+          maxHeight: 320,
+          overflow: 'auto',
+        }}
+      >
+        <pre
+          style={{
+            margin: 0,
+            padding: '16px 20px',
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '0.8125rem',
+            lineHeight: 1.65,
             color: 'var(--code-text)',
-            overflowX: 'auto',
             whiteSpace: 'pre',
-          }}>
-{JSON.stringify(tool.config, null, 2)}</pre>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function McpTerminal() {
-  return (
-    <div style={{
-      width: '100%',
-      maxWidth: 680,
-      background: 'var(--code-surface)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 8,
-      overflow: 'hidden',
-      fontFamily: "'Switzer', Inter, system-ui, sans-serif",
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 20px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(0,0,0,0.15)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: 'var(--code-accent)' }}>
-            MCP Tools
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: '#34D399',
-          }} />
-          <span style={{
-            fontSize: '0.65rem',
-            color: 'rgba(232, 228, 220, 0.5)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-          }}>
-            6 tools
-          </span>
-        </div>
+            transition: 'opacity 400ms ease, transform 400ms ease',
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(6px)',
+          }}
+        >
+          {highlightJson(currentCfg.code)}
+        </pre>
       </div>
 
-      <div>
-        {TOOLS.map((tool, i) => (
-          <ToolCard key={tool.name} tool={tool} defaultOpen={i === 0} />
-        ))}
-      </div>
-
-      <div style={{
-        padding: '10px 20px',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(0,0,0,0.1)',
-        fontFamily: "'Switzer', Inter, system-ui, sans-serif",
-        fontSize: '0.6875rem',
-        color: 'rgba(232, 228, 220, 0.45)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 4,
-      }}>
-        <span>Endpoint: /mcp · Streamable HTTP</span>
-        <span>Protocol: JSON-RPC 2.0 · MCP 2025-11-25</span>
+      {/* Footer */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 20px',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(0,0,0,0.1)',
+          fontSize: '0.65rem',
+          color: 'rgba(232, 228, 220, 0.45)',
+          flexWrap: 'wrap',
+          gap: 8,
+        }}
+      >
+        <span style={{ transition: 'opacity 400ms', opacity: visible ? 1 : 0.3 }}>
+          {currentName}
+        </span>
+        <span>MCP · JSON-RPC 2.0 · Streamable HTTP</span>
       </div>
     </div>
   );

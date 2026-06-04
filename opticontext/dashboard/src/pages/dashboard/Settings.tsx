@@ -43,15 +43,9 @@ export default function Settings({ user }: SettingsProps) {
   const [generatingText, setGeneratingText] = useState(false);
   const [threshold, setThreshold] = useState('80');
   const [thresholdError, setThresholdError] = useState('');
-  const [savingThreshold, setSavingThreshold] = useState(false);
-  const [thresholdSaved, setThresholdSaved] = useState(false);
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
-  const [webhookSaved, setWebhookSaved] = useState(false);
   const [webhookError, setWebhookError] = useState('');
-  const [sendingTest, setSendingTest] = useState(false);
-  const [testSent, setTestSent] = useState(false);
-  const [savingWebhook, setSavingWebhook] = useState(false);
   const [comingSoonMsg, setComingSoonMsg] = useState(false);
 
   const showComingSoon = () => {
@@ -152,41 +146,17 @@ export default function Settings({ user }: SettingsProps) {
   };
 
   const handleSaveThreshold = () => {
-    const val = parseInt(threshold, 10);
-    if (!threshold.trim()) { setThresholdError(VALIDATION.threshold.empty); return; }
-    if (isNaN(val)) { setThresholdError(VALIDATION.threshold.nonNumeric); return; }
-    if (val < 50) { setThresholdError(VALIDATION.threshold.belowMin); return; }
-    if (val > 95) { setThresholdError(VALIDATION.threshold.aboveMax); return; }
     setThresholdError('');
-    setSavingThreshold(true);
-    setTimeout(() => {
-      setSavingThreshold(false);
-      setThresholdSaved(true);
-    }, 300);
+    showComingSoon();
   };
 
   const handleSaveWebhook = () => {
-    const trimmedBot = botToken.trim();
-    const trimmedChat = chatId.trim();
-    if (!trimmedBot) { setWebhookError(VALIDATION.botToken.empty); return; }
-    if (!trimmedChat) { setWebhookError(VALIDATION.chatId.empty); return; }
-    if (!/^\d+:[\w-]+$/.test(trimmedBot)) { setWebhookError(VALIDATION.botToken.wrongFormat); return; }
-    if (!/^-?\d+$/.test(trimmedChat)) { setWebhookError(VALIDATION.chatId.nonNumeric); return; }
-    setSavingWebhook(true);
     setWebhookError('');
-    setTimeout(() => {
-      setWebhookSaved(true);
-      setSavingWebhook(false);
-      setComingSoonMsg(true);
-    }, 500);
+    showComingSoon();
   };
 
   const handleTestMessage = () => {
-    setSendingTest(true);
-    setTimeout(() => {
-      setSendingTest(false);
-      setTestSent(true);
-    }, 600);
+    showComingSoon();
   };
 
   const nonRevokedKeys = keys.filter((k) => !k.revoked);
@@ -464,8 +434,8 @@ export default function Settings({ user }: SettingsProps) {
             <span style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
               % of daily limit
             </span>
-            <button onClick={handleSaveThreshold} className="btn btn-secondary" disabled={savingThreshold} style={{ fontSize: '0.875rem', opacity: savingThreshold ? 0.65 : 1 }}>
-              {savingThreshold ? LOADING.saving : BUTTONS.primary.saveThreshold}
+            <button onClick={handleSaveThreshold} className="btn btn-secondary" style={{ fontSize: '0.875rem' }}>
+              Save threshold
             </button>
           </div>
           {thresholdError && (
@@ -473,9 +443,9 @@ export default function Settings({ user }: SettingsProps) {
               {thresholdError}
             </p>
           )}
-          {thresholdSaved && (
+          {comingSoonMsg && (
             <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 6, animation: 'fadeIn 200ms ease both' }}>
-              Settings recorded locally. Backend connection is not yet available.
+              Coming soon — usage alerts will be available in a future update.
             </p>
           )}
         </div>
@@ -527,35 +497,26 @@ export default function Settings({ user }: SettingsProps) {
         </div>
 
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
-          <button onClick={handleSaveWebhook} className="btn btn-secondary" disabled={savingWebhook} style={{ opacity: savingWebhook ? 0.65 : 1 }}>
-            {savingWebhook ? LOADING.saving : BUTTONS.primary.saveWebhook}
+          <button onClick={handleSaveWebhook} className="btn btn-secondary" style={{ fontSize: '0.875rem' }}>
+            Save webhook
           </button>
-          {webhookSaved && !comingSoonMsg && <StatusChip status="webhook-connected" label={OPERATIONAL.webhookConnected} />}
           {comingSoonMsg && (
             <span style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-muted)', animation: 'fadeIn 200ms ease both' }}>
-              Settings recorded locally. Telegram alert backend is not yet connected.
+              Coming soon — Telegram alerts will be available in a future update.
             </span>
           )}
           <button
             onClick={handleTestMessage}
             className="btn btn-ghost"
-            disabled={sendingTest || !botToken || botToken.length < 20}
-            style={{ opacity: sendingTest || !botToken || botToken.length < 20 ? 0.45 : 1, cursor: sendingTest || !botToken || botToken.length < 20 ? 'not-allowed' : 'pointer' }}
-            title={!botToken || botToken.length < 20 ? TOOLTIPS.saveBotFirst : ''}
+            style={{ fontSize: '0.875rem' }}
           >
-            {sendingTest ? LOADING.sending : BUTTONS.ghost.sendTestMessage}
+            Send test message
           </button>
         </div>
 
         {webhookError && (
           <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--error)', marginBottom: 8 }}>
             {webhookError}
-          </p>
-        )}
-
-        {testSent && (
-          <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: 8, animation: 'fadeIn 200ms ease both' }}>
-            Simulated locally — not sent to Telegram.
           </p>
         )}
         <Link to="/docs/troubleshooting" style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', marginTop: 8 }}>

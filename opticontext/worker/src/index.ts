@@ -250,8 +250,8 @@ async function handleUsage(request: Request): Promise<Response> {
 
   const env = getEnv();
 
-  // Admin access path: verify Firebase JWT (production) or admin secret (dev mode)
-  // Ownership is enforced for Firebase-authenticated users.
+  // Admin access path: verify Supabase JWT (production) or admin secret (dev mode)
+  // Ownership is enforced for authenticated users.
   if (request.headers.get("X-OptiContext-Admin") === "1") {
     const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
     if (!authorized) return jsonResponse({ error: "Unauthorized" }, 401, request);
@@ -333,7 +333,7 @@ async function handleUserActivity(request: Request): Promise<Response> {
 
   const env = getEnv();
 
-  // Admin access path: verify Firebase JWT (production) or admin secret (dev mode)
+  // Admin access path: verify Supabase JWT (production) or admin secret (dev mode)
   if (request.headers.get("X-OptiContext-Admin") === "1") {
     const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
     if (!authorized) return jsonResponse({ error: "Unauthorized" }, 401, request);

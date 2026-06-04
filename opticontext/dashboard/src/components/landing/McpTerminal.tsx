@@ -15,11 +15,11 @@ const TOOLS = [
   'opticontext_guide',
 ];
 
-const PROVIDERS = ['primary', 'edge', 'cache', 'turbo'];
+const PROVIDERS = ['tavily', 'ddg', 'apify', 'gemini', 'cerebras'];
 const REGIONS = ['us-east', 'us-west', 'eu-west', 'apac-sin'];
 const VOICES = ['Scarlett', 'Dan', 'Will', 'Liv', 'Harry', 'Priya', 'Sofia', 'Emma', 'Yuki', 'Mei'];
 const LANGUAGES = ['en-US', 'en-UK', 'hi-IN', 'es-ES', 'fr-FR', 'ja-JP', 'zh-CN', 'pt-BR'];
-const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'llama-4', 'claude-3.5-haiku'];
+const MODELS = ['gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash', 'cerebras-llama-3.3'];
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];

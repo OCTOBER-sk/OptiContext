@@ -6,7 +6,9 @@ export function LandingLayout() {
   return (
     <div style={{ background: 'var(--base)', minHeight: '100vh' }}>
       <LandingNav />
-      <Outlet />
+      <main id="main-content">
+        <Outlet />
+      </main>
     </div>
   );
 }

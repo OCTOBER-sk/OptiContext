@@ -10,6 +10,8 @@ import { getEnv } from "../context";
 import { OptiContextError } from "../utils/errors";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 
+const MAX_JSON_BODY_BYTES = 1 * 1024 * 1024;
+
 interface JSONRPCRequest {
   jsonrpc: "2.0";
   id: string | number | null;
@@ -65,6 +67,15 @@ export async function handleMCPRequest(
         status: 405,
         headers: originCors,
       });
+    }
+
+    // Validate body size before parsing
+    const contentLength = request.headers.get("Content-Length");
+    if (contentLength) {
+      const length = parseInt(contentLength, 10);
+      if (!isNaN(length) && length > MAX_JSON_BODY_BYTES) {
+        return jsonRpcError(null, -32700, "Request body too large. Max 1 MB.", originCors);
+      }
     }
 
     let body: JSONRPCRequest;

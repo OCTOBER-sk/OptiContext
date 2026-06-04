@@ -361,8 +361,7 @@ Return valid JSON with these keys:
 /**
  * Generates embeddings for text using Gemini's embedding model.
  * Returns a 768-dimensional float vector.
- * Note: produces 768d vectors, not 1536d.
- * Update your Supabase schema to VECTOR(768) if using this.
+ * Schema uses VECTOR(768) — aligned.
  */
 export async function embedText(text: string): Promise<number[]> {
   const key1 = getEnv().GEMINI_API_KEY;

@@ -18,7 +18,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
         "url": "${MCP_ENDPOINT}",
         "transport": "streamable-http",
         "headers": {
-          "Authorization": "Bearer __MASKED_KEY__"
+          "Authorization": "Bearer <YOUR_API_KEY>"
         }
       }
     }
@@ -31,7 +31,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
   opticontext:
     url: "${MCP_ENDPOINT}"
     headers:
-      Authorization: "Bearer __MASKED_KEY__"
+      Authorization: "Bearer <YOUR_API_KEY>"
     timeout: 180`,
   },
   OpenCode: {
@@ -42,7 +42,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
       "type": "remote",
       "url": "${MCP_ENDPOINT}",
       "headers": {
-        "Authorization": "Bearer __MASKED_KEY__"
+        "Authorization": "Bearer <YOUR_API_KEY>"
       },
       "enabled": true
     }
@@ -57,7 +57,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
       "type": "http",
       "url": "${MCP_ENDPOINT}",
       "headers": {
-        "Authorization": "Bearer __MASKED_KEY__"
+        "Authorization": "Bearer <YOUR_API_KEY>"
       }
     }
   }
@@ -71,7 +71,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
       "url": "${MCP_ENDPOINT}",
       "transport": "streamable-http",
       "headers": {
-        "Authorization": "Bearer __MASKED_KEY__"
+        "Authorization": "Bearer <YOUR_API_KEY>"
       }
     }
   }
@@ -84,7 +84,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
     "opticontext": {
       "serverUrl": "${MCP_ENDPOINT}",
       "headers": {
-        "Authorization": "Bearer __MASKED_KEY__"
+        "Authorization": "Bearer <YOUR_API_KEY>"
       }
     }
   }
@@ -95,7 +95,7 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
     code: `{
   "server": "${MCP_ENDPOINT}",
   "headers": {
-    "Authorization": "Bearer __MASKED_KEY__"
+    "Authorization": "Bearer <YOUR_API_KEY>"
   }
 }`,
   },

@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
 CREATE INDEX IF NOT EXISTS idx_api_keys_agent ON api_keys(agent_id);
 CREATE INDEX IF NOT EXISTS idx_daily_usage_agent_date ON daily_usage(agent_id, date);
+CREATE INDEX IF NOT EXISTS idx_agent_registry_owner ON agent_registry(owner_email);
 
 CREATE TABLE IF NOT EXISTS uploaded_files (
     file_id TEXT PRIMARY KEY,

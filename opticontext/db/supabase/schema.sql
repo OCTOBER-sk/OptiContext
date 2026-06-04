@@ -23,13 +23,13 @@ CREATE TABLE IF NOT EXISTS agent_profiles (
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Memory embeddings table (pgvector)
--- NOTE: Gemini gemini-embedding-2 produces 3072-dimensional vectors.
+-- NOTE: Gemini gemini-embedding-2 produces 768-dimensional vectors.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS memory_embeddings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id TEXT NOT NULL,
     content_text TEXT NOT NULL,
-    embedding VECTOR(3072),
+    embedding VECTOR(768),
     metadata JSONB DEFAULT '{}',
     importance_score INTEGER NOT NULL DEFAULT 5,
     namespace TEXT NOT NULL DEFAULT 'general',
@@ -47,7 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_memory_embeddings_agent
 --     ON memory_embeddings
 --     USING ivfflat (embedding vector_cosine_ops)
 --     WITH (lists = 100);
--- NOTE: ivfflat index on VECTOR(3072) is large. Add after data is populated.
+-- NOTE: ivfflat index on VECTOR(768) is large. Add after data is populated.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Memory entries table (plain text storage, no embeddings)
@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_memory_entries_agent
 -- namespace that exceed the `match_threshold` cosine similarity score.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION match_memories(
-    query_embedding VECTOR(3072),
+    query_embedding VECTOR(768),
     match_count INTEGER DEFAULT 5,
     match_threshold FLOAT DEFAULT 0.7,
     p_agent_id TEXT DEFAULT NULL,

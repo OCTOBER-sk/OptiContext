@@ -84,12 +84,10 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
     window.setTimeout(() => setter(false), 1500);
   };
 
-  const configMaskedKey = maskedKey || 'opctx_████████████████████████████████';
-
   const getConfigCode = (client: string) => {
     const cfg = CLIENT_CONFIGS[client];
     if (!cfg) return '';
-    return cfg.code.replaceAll('__MASKED_KEY__', configMaskedKey);
+    return cfg.code;
   };
 
   const currentConfig = getConfigCode(activeClient);
@@ -257,7 +255,26 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
           </Tooltip>
         </div>
 
-        {selectedKey && <SetupPrompt apiKey={`opctx_${selectedKey.agent_id}_YOUR_FULL_KEY`} />}
+        {selectedKey && (
+          <div style={{
+            background: 'var(--sunken)',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            padding: '12px 16px',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}>
+            <span style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Need the full key? Create a new one in Settings — keys are shown only at creation time.
+            </span>
+            <Link to="/dashboard/settings" className="btn btn-ghost" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+              Create key →
+            </Link>
+          </div>
+        )}
       </div>
 
       <div style={{ marginBottom: 24 }}>
@@ -316,7 +333,7 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
           </pre>
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4 }}>
-          {OPERATIONAL.keyMasked}
+          Replace <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>&lt;YOUR_API_KEY&gt;</code> with the key shown at creation time. Create a new key in Settings if you no longer have it.
         </p>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
           After connecting, call <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>opticontext_guide</code> with <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>topic:"all"</code> to discover available capabilities and operational constraints.

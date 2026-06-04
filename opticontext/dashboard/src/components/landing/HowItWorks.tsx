@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 const STEPS = [
@@ -11,23 +11,6 @@ const STEPS = [
 
 export function HowItWorks() {
   const { ref, revealed } = useScrollReveal();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(`{
-  "mcpServers": {
-    "opticontext": {
-      "url": "https://mcp.opticontext.dev/mcp",
-      "transport": "streamable-http",
-      "headers": {
-        "Authorization": "Bearer YOUR_AGENT_KEY"
-      }
-    }
-  }
-}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
 
   return (
     <section
@@ -133,71 +116,6 @@ export function HowItWorks() {
               </p>
             </div>
           ))}
-        </div>
-
-        <div
-          style={{
-            marginTop: 64,
-            display: 'flex',
-            justifyContent: 'center',
-            opacity: revealed ? 1 : 0,
-            transition: 'opacity 400ms ease 400ms',
-          }}
-        >
-          <div className="code-block" style={{ maxWidth: 480, position: 'relative' }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12,
-                paddingBottom: 8,
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.75rem',
-                  color: 'var(--code-muted)',
-                }}
-              >
-                mcp.config.json
-              </span>
-              <button
-                className="copy-button"
-                style={{ position: 'static', opacity: 1 }}
-                onClick={handleCopy}
-                aria-label="Copy config"
-              >
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            <pre style={{ margin: 0, overflow: 'auto', textAlign: 'left' }}>
-              <code>
-                <span style={{ color: 'var(--code-muted)' }}>{'{'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'  "mcpServers": {'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'    "opticontext": {'}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'      "url"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"https://mcp.opticontext.dev/mcp"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'      "transport"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"streamable-http"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'      "headers"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': {'}</span>{'\n'}
-                <span style={{ color: 'var(--code-accent)' }}>{'        "Authorization"'}</span>
-                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"Bearer YOUR_AGENT_KEY"'}</span>{'\n'}
-                <span style={{ color: 'var(--code-text)' }}>{'      }'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'    }'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'  }'}</span>{'\n'}
-                <span style={{ color: 'var(--code-muted)' }}>{'}'}</span>
-              </code>
-            </pre>
-          </div>
         </div>
       </div>
     </section>

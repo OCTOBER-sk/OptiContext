@@ -8,6 +8,7 @@ export function HeroSection() {
   const [visible, setVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -175,6 +176,74 @@ export function HeroSection() {
           <span>Sub-5ms cold starts</span>
           <span style={{ width: 1, height: 12, background: 'var(--border)' }} aria-hidden="true" />
           <span>Zero infrastructure cost</span>
+        </div>
+
+        <div
+          style={{
+            marginTop: 48,
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+        >
+          <div className="code-block" style={{ maxWidth: 480, position: 'relative', textAlign: 'left' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+                paddingBottom: 8,
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.75rem',
+                  color: 'var(--code-muted)',
+                }}
+              >
+                mcp.config.json
+              </span>
+              <button
+                className="copy-button"
+                style={{ position: 'static', opacity: 1 }}
+                onClick={() => {
+                  navigator.clipboard.writeText(`{\n  "mcpServers": {\n    "opticontext": {\n      "url": "https://mcp.opticontext.dev/mcp",\n      "transport": "streamable-http",\n      "headers": {\n        "Authorization": "Bearer YOUR_AGENT_KEY"\n      }\n    }\n  }\n}`);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+                aria-label="Copy config"
+              >
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+            <pre style={{ margin: 0, overflow: 'auto', textAlign: 'left' }}>
+              <code>
+                <span style={{ color: 'var(--code-muted)' }}>{'{'}</span>{'\n'}
+                <span style={{ color: 'var(--code-muted)' }}>{'  "mcpServers": {'}</span>{'\n'}
+                <span style={{ color: 'var(--code-muted)' }}>{'    "opticontext": {'}</span>{'\n'}
+                <span style={{ color: 'var(--code-accent)' }}>{'      "url"'}</span>
+                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
+                <span style={{ color: 'var(--code-string)' }}>{'"https://mcp.opticontext.dev/mcp"'}</span>
+                <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
+                <span style={{ color: 'var(--code-accent)' }}>{'      "transport"'}</span>
+                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
+                <span style={{ color: 'var(--code-string)' }}>{'"streamable-http"'}</span>
+                <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
+                <span style={{ color: 'var(--code-accent)' }}>{'      "headers"'}</span>
+                <span style={{ color: 'var(--code-text)' }}>{': {'}</span>{'\n'}
+                <span style={{ color: 'var(--code-accent)' }}>{'        "Authorization"'}</span>
+                <span style={{ color: 'var(--code-text)' }}>{': '}</span>
+                <span style={{ color: 'var(--code-string)' }}>{'"Bearer YOUR_AGENT_KEY"'}</span>{'\n'}
+                <span style={{ color: 'var(--code-text)' }}>{'      }'}</span>{'\n'}
+                <span style={{ color: 'var(--code-muted)' }}>{'    }'}</span>{'\n'}
+                <span style={{ color: 'var(--code-muted)' }}>{'  }'}</span>{'\n'}
+                <span style={{ color: 'var(--code-muted)' }}>{'}'}</span>
+              </code>
+            </pre>
+          </div>
         </div>
       </div>
 

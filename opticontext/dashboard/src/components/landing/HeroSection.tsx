@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../lib/firebase';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { supabase, toAuthUser } from '../../lib/supabase';
+import type { AuthUser } from '../../lib/supabase';
 import { BUTTONS, CONFIRMATIONS } from '../../lib/microcopy';
 
 const CONFIG_JSON = `{
@@ -20,7 +20,7 @@ export function HeroSection() {
   const [visible, setVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,8 +29,10 @@ export function HeroSection() {
   }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return unsub;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toAuthUser(session.user) : null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {

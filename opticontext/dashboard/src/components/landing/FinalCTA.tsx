@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { supabase, toAuthUser } from '../../lib/supabase';
+import type { AuthUser } from '../../lib/supabase';
 import { BUTTONS } from '../../lib/microcopy';
 
 export function FinalCTA() {
   const navigate = useNavigate();
   const { ref, revealed } = useScrollReveal();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return unsub;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toAuthUser(session.user) : null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Copy, Plus } from 'lucide-react';
-import type { User } from 'firebase/auth';
+import type { AuthUser } from '../../lib/supabase';
 import { StatusChip } from '../../components/ui/StatusChip';
 import { CapabilityBlock } from '../../components/ui/CapabilityBlock';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -16,7 +16,7 @@ import SetupPrompt from '../../components/ui/SetupPrompt';
 import { MCP_ENDPOINT, CLIENT_CONFIGS } from '../../lib/runtime-config';
 
 interface DashboardHomeProps {
-  user: User | null;
+  user: AuthUser | null;
 }
 
 export default function DashboardHome({ user }: DashboardHomeProps) {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { auth } from '../../lib/firebase';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { supabase, toAuthUser } from '../../lib/supabase';
+import type { AuthUser } from '../../lib/supabase';
 import { BUTTONS } from '../../lib/microcopy';
 
 const NAV_LINKS = [
@@ -15,12 +15,14 @@ const NAV_LINKS = [
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return unsub;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toAuthUser(session.user) : null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {

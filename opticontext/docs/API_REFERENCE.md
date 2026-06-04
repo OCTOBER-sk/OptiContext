@@ -16,23 +16,23 @@ Authorization: Bearer opctx_<agent_id>_<random_hex>
 
 Admin endpoints (`/admin/*`) use a two-tier auth model depending on environment:
 
-**Production** (when `FIREBASE_PROJECT_ID` is configured):
+**Production** (when `SUPABASE_JWT_SECRET` is configured):
 
 ```
-Authorization: Bearer <firebase_id_token>
+Authorization: Bearer <supabase_access_token>
 X-OptiContext-Admin: 1
 ```
 
-Obtain a Firebase ID token by signing in via the dashboard (Google OAuth). The token is verified server-side against Google public certs. `X-Admin-Secret` alone is rejected in production.
+The access token is obtained by signing in via the dashboard (Google OAuth via Supabase Auth). The token is verified server-side using HMAC-SHA256 with the Supabase JWT secret. `X-Admin-Secret` alone is rejected in production.
 
-**Development** (when `FIREBASE_PROJECT_ID` is not configured):
+**Development** (when `SUPABASE_JWT_SECRET` is not configured):
 
 ```
 X-Admin-Secret: <your_admin_secret>
 X-OptiContext-Admin: 1
 ```
 
-The `X-Admin-Secret` fallback is only active when Firebase is not configured. Do not use it in production environments.
+The `X-Admin-Secret` fallback is only active when `SUPABASE_JWT_SECRET` is not configured. Do not use it in production environments.
 
 ---
 
@@ -117,7 +117,7 @@ Create a new agent and generate an API key.
 }
 ```
 
-Note: `owner_email` is derived from the authenticated Firebase JWT and cannot be overridden in the request body.
+Note: `owner_email` is derived from the authenticated Supabase JWT and cannot be overridden in the request body.
 
 **Response:**
 ```json

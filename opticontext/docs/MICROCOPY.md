@@ -221,7 +221,7 @@ Used for data-heavy components that load from the API.
 Connecting to OptiContext
 ```
 
-*Shown during the brief Firebase auth state check on page mount, before the UI resolves.*
+*Shown during the brief auth state check on page mount, before the UI resolves.*
 *Switzer 400 · 14px · Text muted · Centered · No spinner · Fade in after 300ms delay (prevents flash on fast connections)*
 
 ---
@@ -665,7 +665,7 @@ Sign-out is not a destructive action. No confirmation required.
 Sign out
 ```
 
-*Ghost button. Single click. Clears Firebase session. Redirects to `/`.*
+*Ghost button. Single click. Clears auth session. Redirects to `/`.*
 *No inline confirmation. No "are you sure?" flow.*
 
 ---

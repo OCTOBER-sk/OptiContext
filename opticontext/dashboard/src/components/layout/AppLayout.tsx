@@ -1,10 +1,10 @@
 ﻿import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import type { User } from 'firebase/auth';
+import type { AuthUser } from '../../lib/supabase';
 import { AppTopNav } from './AppTopNav';
 
 interface AppLayoutProps {
-  user: User | null;
+  user: AuthUser | null;
 }
 
 const SIDEBAR_LINKS = [

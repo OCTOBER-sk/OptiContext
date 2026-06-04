@@ -6,15 +6,15 @@ A practical reference for running local MCP tests against the OptiContext Worker
 
 ## Quick Start (cold start to a working test)
 
-### 1. Disable Firebase production mode
+### 1. Disable Supabase Auth production mode
 
-In `worker/.dev.vars`, comment out `FIREBASE_PROJECT_ID`:
+In `worker/.dev.vars`, ensure `SUPABASE_JWT_SECRET` is empty or commented out:
 
 ```
-# FIREBASE_PROJECT_ID=opticontext-68059
+# SUPABASE_JWT_SECRET=
 ```
 
-This lets you authenticate with `X-Admin-Secret` alone instead of requiring a Firebase JWT. Restore the line after testing.
+This lets you authenticate with `X-Admin-Secret` alone instead of requiring a Supabase JWT. Restore the value after testing.
 
 ### 2. Start the worker (background job)
 
@@ -65,13 +65,12 @@ taskkill /F /IM workerd.exe
 
 ## Key Gotchas (learned the hard way)
 
-### FIREBASE_PROJECT_ID
+### SUPABASE_JWT_SECRET
 
-- Must be **commented out** (`# FIREBASE_PROJECT_ID=...`) but NOT removed entirely.
-- Removing the line entirely causes worker instability (Env interface requires it).
-- Commented out = dev mode (X-Admin-Secret works standalone).
-- Active = production mode (X-Admin-Secret alone is rejected; Firebase JWT required).
-- Restore the line after testing so the file is clean for production deployment.
+- Must be **empty/commented out** (`# SUPABASE_JWT_SECRET=`) for dev mode.
+- Empty = dev mode (X-Admin-Secret works standalone).
+- Populated = production mode (X-Admin-Secret alone is rejected; Supabase JWT required).
+- Restore the value after testing so the file is clean for production deployment.
 
 ### Worker lifecycle
 
@@ -125,7 +124,7 @@ Write-Output $r.result.content[0].text
 
 | Status | Error | Cause |
 |--------|-------|-------|
-| 403 | `Forbidden` | Admin API hit in production mode (FIREBASE_PROJECT_ID active) |
+| 403 | `Forbidden` | Admin API hit in production mode (SUPABASE_JWT_SECRET active) |
 | 401 | `AUTH_ERROR` | Request to `/mcp` without valid Bearer token |
 | 401 | `Invalid API key` | Key revoked, expired from KV, or never registered |
 | 413 | `Request body too large` | Body exceeds 1MB (JSON) or 2GB (upload) limit |
@@ -135,10 +134,10 @@ Write-Output $r.result.content[0].text
 
 ## Required setup per test
 
-1. Comment out `FIREBASE_PROJECT_ID` in `.dev.vars`
+1. Ensure `SUPABASE_JWT_SECRET` is empty in `.dev.vars`
 2. Start worker via `Start-Job`
 3. Wait for health check
 4. Register agent via `/admin/agents` POST
 5. Use returned key for all MCP calls
 6. Kill worker via `taskkill`
-7. Uncomment `FIREBASE_PROJECT_ID` in `.dev.vars`
+7. Restore `SUPABASE_JWT_SECRET` in `.dev.vars`

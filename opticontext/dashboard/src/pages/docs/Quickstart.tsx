@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { supabase, toAuthUser } from '../../lib/supabase';
+import type { AuthUser } from '../../lib/supabase';
 import { CodeBlock } from '../../components/ui/CodeBlock';
 import { Badge } from '../../components/ui/Badge';
 import { BUTTONS } from '../../lib/microcopy';
@@ -191,12 +191,14 @@ const RESPONSE_FIELDS = [
 export default function Quickstart() {
   const [activeStep, setActiveStep] = useState(0);
   const [activeClient, setActiveClient] = useState<Client>('Claude Code');
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setUser);
-    return unsub;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toAuthUser(session.user) : null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const isCustom = activeClient === 'Custom MCP runtime';

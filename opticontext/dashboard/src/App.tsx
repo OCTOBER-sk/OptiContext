@@ -1,8 +1,8 @@
 import React, { Suspense, Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from './lib/firebase';
+import { supabase, toAuthUser } from './lib/supabase';
+import type { AuthUser } from './lib/supabase';
 import { ToastProvider } from './components/ui/Toast';
 import { AppLayout } from './components/layout/AppLayout';
 import { LandingLayout } from './components/layout/LandingLayout';
@@ -10,6 +10,7 @@ import { DocsLayout } from './components/layout/DocsLayout';
 
 const Landing     = React.lazy(() => import('./pages/Landing'));
 const Auth        = React.lazy(() => import('./pages/Auth'));
+const AuthCallback = React.lazy(() => import('./pages/AuthCallback'));
 const DocsHome    = React.lazy(() => import('./pages/docs/DocsHome'));
 const Quickstart  = React.lazy(() => import('./pages/docs/Quickstart'));
 const ToolRef     = React.lazy(() => import('./pages/docs/ToolRef'));
@@ -90,26 +91,30 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
   }
 }
 
-function ProtectedRoute({ children, user }: { children: React.ReactNode; user: User | null }) {
+function ProtectedRoute({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
-function PublicOnlyRoute({ children, user }: { children: React.ReactNode; user: User | null }) {
+function PublicOnlyRoute({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
   if (user) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
 export default function App() {
-  const [user, setUser] = React.useState<User | null>(null);
+  const [user, setUser] = React.useState<AuthUser | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(toAuthUser(session.user));
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
-    return unsub;
+    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) return <PageLoading />;
@@ -133,6 +138,9 @@ export default function App() {
                   <Route path="/docs/troubleshooting" element={<Troubleshooting />} />
                 </Route>
               </Route>
+
+              {/* Auth callback (no route guard — handles redirect hash before session resolves) */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Auth */}
               <Route path="/auth" element={

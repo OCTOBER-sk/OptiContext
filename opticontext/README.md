@@ -45,7 +45,7 @@ wrangler deploy
 - **Search**: Tavily, DuckDuckGo, Apify
 - **Voice**: Unreal Speech (48 voices, 8 languages)
 - **Storage**: CF KV, CF R2, Turso (libSQL), Supabase (pgvector)
-- **Auth**: Firebase Auth (dashboard), KV-based API keys (hot path)
+- **Auth**: Supabase Auth Google OAuth (dashboard), KV-based API keys (hot path)
 - **Dashboard**: React + Vite + Tailwind on Cloudflare Pages
 - **Total monthly cost**: $0
 

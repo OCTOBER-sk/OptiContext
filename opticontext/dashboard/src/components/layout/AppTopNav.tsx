@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Settings2, LogOut } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import type { User } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
+import type { AuthUser } from '../../lib/supabase';
 
 interface AppTopNavProps {
-  user: User | null;
+  user: AuthUser | null;
 }
 
 export function AppTopNav({ user }: AppTopNavProps) {
@@ -25,7 +24,7 @@ export function AppTopNav({ user }: AppTopNavProps) {
   }, []);
 
   const handleSignOut = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     navigate('/');
   };
 

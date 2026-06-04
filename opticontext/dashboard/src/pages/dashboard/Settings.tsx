@@ -1,9 +1,8 @@
 ﻿import React, { useState } from 'react';
-import { signOut } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { Check, Copy, Pencil, Trash2 } from 'lucide-react';
-import type { User } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
+import type { AuthUser } from '../../lib/supabase';
 import { Tooltip } from '../../components/ui/Tooltip';
 import { InlineConfirm } from '../../components/ui/InlineConfirm';
 import { StatusChip } from '../../components/ui/StatusChip';
@@ -13,7 +12,7 @@ import { VALIDATION } from '../../lib/validation';
 import { BUTTONS, LOADING, CONFIRMATIONS, EMPTY_STATES, TOOLTIPS, OPERATIONAL } from '../../lib/microcopy';
 
 interface SettingsProps {
-  user: User | null;
+  user: AuthUser | null;
 }
 
 function maskAgentId(agentId: string): string {
@@ -585,7 +584,7 @@ export default function Settings({ user }: SettingsProps) {
           </p>
 
           <button
-            onClick={async () => { await signOut(auth); navigate('/'); }}
+            onClick={async () => { await supabase.auth.signOut(); navigate('/'); }}
             className="btn btn-ghost"
             style={{ marginTop: 24, padding: '8px 12px', fontSize: '0.875rem' }}
           >

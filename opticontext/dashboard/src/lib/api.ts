@@ -1,12 +1,11 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "https://opticontext.yourworker.workers.dev";
-const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || "";
+import { supabase } from "./supabase";
 
-import { auth } from "./firebase";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://opticontext.yourworker.workers.dev";
 
 async function getAuthToken(): Promise<string> {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-  return user.getIdToken();
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session?.access_token) throw new Error("Not authenticated");
+  return session.access_token;
 }
 
 async function fetchApi(
@@ -24,9 +23,6 @@ async function fetchApi(
 
   if (isAdmin) {
     headers["X-OptiContext-Admin"] = "1";
-    if (ADMIN_SECRET) {
-      headers["X-Admin-Secret"] = ADMIN_SECRET;
-    }
   }
 
   const response = await fetch(`${API_BASE}${path}`, {

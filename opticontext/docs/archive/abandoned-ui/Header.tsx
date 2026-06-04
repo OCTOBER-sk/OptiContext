@@ -1,13 +1,12 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
-import type { User } from 'firebase/auth';
 import { Button } from '../ui/Button';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   title: string;
-  user: User | null;
+  user: { email?: string; displayName?: string; photoURL?: string } | null;
   action?: { label: string; onClick: () => void };
 }
 

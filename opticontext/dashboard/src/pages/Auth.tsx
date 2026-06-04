@@ -1,8 +1,7 @@
 import React from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BUTTONS, LOADING, OPERATIONAL } from '../lib/microcopy';
 
 export default function Auth() {
@@ -10,21 +9,27 @@ export default function Auth() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'access_denied') {
+      setError(null);
+    }
+  }, []);
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
     try {
-      googleProvider.setCustomParameters({ prompt: 'select_account' });
-      await signInWithPopup(auth, googleProvider);
-      navigate('/dashboard');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { prompt: 'select_account' },
+        },
+      });
+      if (error) throw error;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Authentication failed';
-      if (message.includes('popup-closed-by-user')) {
-        setError(null);
-      } else {
-        setError(OPERATIONAL.authFailed);
-      }
-    } finally {
+      setError(OPERATIONAL.authFailed);
       setLoading(false);
     }
   };

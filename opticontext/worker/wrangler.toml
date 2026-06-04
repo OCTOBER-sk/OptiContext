@@ -53,17 +53,17 @@ bucket_name = "opticontext-tts"
 # Never commit actual secret values to version control.
 #
 # Required secrets:
-#   CEREBRAS_API_KEY    — from console.cerebras.ai
-#   GEMINI_API_KEY      — from aistudio.google.com/app/apikey
-#   TAVILY_API_KEY      — from tavily.com/dashboard
-#   APIFY_API_KEY       — from console.apify.com/account/integrations
-#   UNREAL_SPEECH_KEY   — from unrealspeech.com/dashboard
-#   TURSO_DB_URL        — from turso.tech (format: libsql://dbname-org.turso.io)
-#   TURSO_AUTH_TOKEN    — from turso.tech
-#   SUPABASE_URL        — from supabase.com/dashboard/project/settings/api
+#   CEREBRAS_API_KEY     — from console.cerebras.ai
+#   GEMINI_API_KEY       — from aistudio.google.com/app/apikey
+#   TAVILY_API_KEY       — from tavily.com/dashboard
+#   APIFY_API_KEY        — from console.apify.com/account/integrations
+#   UNREAL_SPEECH_KEY    — from unrealspeech.com/dashboard
+#   TURSO_DB_URL         — from turso.tech (format: libsql://dbname-org.turso.io)
+#   TURSO_AUTH_TOKEN     — from turso.tech
+#   SUPABASE_URL         — from supabase.com/dashboard/project/settings/api
 #   SUPABASE_SERVICE_KEY — service_role key from Supabase
-#   ADMIN_SECRET        — generate with: openssl rand -hex 32
-#   FIREBASE_PROJECT_ID — your Firebase project ID
+#   SUPABASE_JWT_SECRET  — from Supabase Dashboard → Settings → API → JWT Settings → JWT Secret
+#   ADMIN_SECRET         — generate with: openssl rand -hex 32
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─────────────────────────────────────────────────────────────────────────────

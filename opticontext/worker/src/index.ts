@@ -11,7 +11,7 @@ import { corsHeaders, corsPreflightHeaders } from "./utils/cors";
 import cryptoUtil from "./utils/crypto";
 import { GUIDE } from "./tools/guide";
 import { assertOwnership, OwnershipError, ownershipErrorResponse } from "./auth/ownership";
-import { verifyFirebaseToken } from "./auth/verify-firebase";
+import { verifySupabaseToken } from "./auth/verify-supabase";
 import { sanitizeFilename, safeExtension, validateMimeType } from "./utils/safe-fetch";
 
 const SERVER_VERSION = "1.0.0";
@@ -45,6 +45,7 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // ── 1. Inject env into all modules ──────────────────────────────
     setEnv(env);
+
 
     const url = new URL(request.url);
     const { pathname } = url;
@@ -252,7 +253,7 @@ async function handleUsage(request: Request): Promise<Response> {
   // Admin access path: verify Firebase JWT (production) or admin secret (dev mode)
   // Ownership is enforced for Firebase-authenticated users.
   if (request.headers.get("X-OptiContext-Admin") === "1") {
-    const { authorized, email, hasOwnershipContext } = await getFirebaseUser(request, env);
+    const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
     if (!authorized) return jsonResponse({ error: "Unauthorized" }, 401, request);
     agentId = urlObj.searchParams.get("agent_id") ?? null;
     if (!agentId) {
@@ -334,7 +335,7 @@ async function handleUserActivity(request: Request): Promise<Response> {
 
   // Admin access path: verify Firebase JWT (production) or admin secret (dev mode)
   if (request.headers.get("X-OptiContext-Admin") === "1") {
-    const { authorized, email, hasOwnershipContext } = await getFirebaseUser(request, env);
+    const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
     if (!authorized) return jsonResponse({ error: "Unauthorized" }, 401, request);
     agentId = urlObj.searchParams.get("agent_id") ?? null;
     if (!agentId) {
@@ -380,20 +381,20 @@ async function handleUserActivity(request: Request): Promise<Response> {
 
 // ── Admin Handlers ────────────────────────────────────────────────────────────
 
-async function getFirebaseUser(request: Request, env: Env): Promise<{
+async function getAuthUser(request: Request, env: Env): Promise<{
   authorized: boolean;
   email: string;
   hasOwnershipContext: boolean;
 }> {
-  // ── 1. PRIMARY: Firebase JWT verification ──────────────────────────
+  // ── 1. PRIMARY: Supabase JWT verification ──────────────────────────
   //    Production auth path. Verifies JWT signature, issuer, audience,
-  //    expiration, and project binding using Google public certs.
+  //    expiration, and project binding using HMAC-SHA256 with JWT secret.
   const authHeader = request.headers.get("Authorization");
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
-    if (env.FIREBASE_PROJECT_ID) {
+    if (env.SUPABASE_JWT_SECRET) {
       try {
-        const verified = await verifyFirebaseToken(token);
+        const verified = await verifySupabaseToken(token);
         if (verified) {
           return { authorized: true, email: verified.email, hasOwnershipContext: !!verified.email };
         }
@@ -405,26 +406,22 @@ async function getFirebaseUser(request: Request, env: Env): Promise<{
 
   // ── 2. FALLBACK: X-Admin-Secret (local development only) ───────────
   //    This fallback is restricted to development environments where
-  //    Firebase is not fully configured. In production, X-Admin-Secret
-  //    is only accepted as a supplementary header alongside a valid
-  //    Firebase JWT, NOT as a standalone auth mechanism.
+  //    Supabase Auth is not fully configured.
   //
-  //    Guard: FIREBASE_PROJECT_ID must NOT be configured (i.e., dev mode).
-  const isProduction = !!env.FIREBASE_PROJECT_ID;
+  //    Guard: SUPABASE_JWT_SECRET must NOT be configured (i.e., dev mode).
+  const isProduction = !!env.SUPABASE_JWT_SECRET;
   const adminSecret = request.headers.get("X-Admin-Secret");
   if (!isProduction && env.ADMIN_SECRET && adminSecret === env.ADMIN_SECRET) {
     const devEmail = env.ADMIN_EMAIL || "dev@opticontext.local";
-    logger.info("[getFirebaseUser] Dev-mode X-Admin-Secret auth", { email: devEmail });
+    logger.info("[getAuthUser] Dev-mode X-Admin-Secret auth", { email: devEmail });
     return { authorized: true, email: devEmail, hasOwnershipContext: false };
   }
 
   // ── 3. SUPPLEMENTARY: X-Admin-Secret in production ─────────────────
-  //    In production, X-Admin-Secret is ONLY accepted if a valid Firebase
+  //    In production, X-Admin-Secret is ONLY accepted if a valid Supabase
   //    JWT was also provided. This prevents standalone admin-secret auth.
   if (isProduction && env.ADMIN_SECRET && adminSecret === env.ADMIN_SECRET) {
-    // A valid Firebase JWT is required for user identity.
-    // X-Admin-Secret alone is insufficient in production.
-    logger.warn("[getFirebaseUser] X-Admin-Secret used without valid Firebase JWT in production — rejected");
+    logger.warn("[getAuthUser] X-Admin-Secret used without valid Supabase JWT in production — rejected");
   }
 
   return { authorized: false, email: "", hasOwnershipContext: false };
@@ -434,7 +431,7 @@ async function handleAdminCreateAgent(
   request: Request,
   env: Env,
 ): Promise<Response> {
-  const { authorized, email } = await getFirebaseUser(request, env);
+  const { authorized, email } = await getAuthUser(request, env);
   if (!authorized) {
     return jsonResponse({ error: "Forbidden" }, 403, request);
   }
@@ -599,7 +596,7 @@ async function handleAdminListAgents(
   request: Request,
   env: Env,
 ): Promise<Response> {
-  const { authorized, email } = await getFirebaseUser(request, env);
+  const { authorized, email } = await getAuthUser(request, env);
   if (!authorized) {
     return jsonResponse({ error: "Forbidden" }, 403, request);
   }
@@ -617,7 +614,7 @@ async function handleAdminRevokeAgent(
   env: Env,
   pathname: string,
 ): Promise<Response> {
-  const { authorized, email, hasOwnershipContext } = await getFirebaseUser(request, env);
+  const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
   if (!authorized) {
     return jsonResponse({ error: "Forbidden" }, 403, request);
   }
@@ -654,7 +651,7 @@ async function handleAdminRenameAgent(
   env: Env,
   pathname: string,
 ): Promise<Response> {
-  const { authorized, email, hasOwnershipContext } = await getFirebaseUser(request, env);
+  const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
   if (!authorized) {
     return jsonResponse({ error: "Forbidden" }, 403, request);
   }
@@ -703,7 +700,7 @@ async function handleAdminLogs(
   env: Env,
   url: URL,
 ): Promise<Response> {
-  const { authorized, email, hasOwnershipContext } = await getFirebaseUser(request, env);
+  const { authorized, email, hasOwnershipContext } = await getAuthUser(request, env);
   if (!authorized) {
     return jsonResponse({ error: "Forbidden" }, 403, request);
   }

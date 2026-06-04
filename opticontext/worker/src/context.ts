@@ -41,19 +41,20 @@ export interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_KEY: string;
 
+  // Supabase JWT Secret (for dashboard auth verification)
+  // Required in production — when not set, Supabase JWT verification
+  // is skipped and X-Admin-Secret fallback is used for local development.
+  // Get this from Supabase Dashboard → Settings → API → JWT Settings → JWT Secret
+  SUPABASE_JWT_SECRET?: string;
+
   // Admin Token (for dashboard → worker admin API calls)
   ADMIN_SECRET: string;
 
-  // Admin Email (optional, for local dev when Firebase JWT extraction fails)
+  // Admin Email (optional, for local dev when Supabase JWT extraction fails)
   ADMIN_EMAIL?: string;
 
   // MCP Tool timeout (ms), default 180000 (3 min)
   MCP_TOOL_TIMEOUT_MS?: string;
-
-  // Firebase Project ID (for dashboard auth verification)
-  // Optional — when not set, Firebase JWT verification is skipped
-  // and X-Admin-Secret fallback is used for local development.
-  FIREBASE_PROJECT_ID?: string;
 }
 
 let _env: Env | null = null;

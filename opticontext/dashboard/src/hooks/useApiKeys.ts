@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { api, type AgentSummary } from '../lib/api';
 
 export interface KeyEntry {
@@ -29,6 +29,14 @@ export function useApiKeys(): ApiKeysState & {
     error: null,
   });
 
+  // Synchronous re-entrancy guard. React state updates (e.g. `setCreatingKey(true)`)
+  // are batched and don't reach the DOM until the next render. Between the first
+  // submit and the render that disables the input, a second Enter press can fire
+  // another submit that captures the cleared `inlineKeyName` state and posts an
+  // empty body, which the worker rejects with 400. This ref updates synchronously
+  // so the second call is dropped before the API request leaves the browser.
+  const createInFlight = useRef(false);
+
   const fetchKeys = useCallback(async () => {
     try {
       const agents = await api.listAgents();
@@ -51,12 +59,20 @@ export function useApiKeys(): ApiKeysState & {
   useEffect(() => { fetchKeys(); }, [fetchKeys]);
 
   const createKey = useCallback(async (name: string): Promise<{ key: string; agent_id: string }> => {
-    const result = await api.createAgent({
-      agent_id: name.trim(),
-      display_name: name.trim(),
-    });
-    await fetchKeys();
-    return { key: result.key, agent_id: result.agent_id };
+    if (createInFlight.current) {
+      throw new Error('Key creation already in progress');
+    }
+    createInFlight.current = true;
+    try {
+      const result = await api.createAgent({
+        agent_id: name.trim(),
+        display_name: name.trim(),
+      });
+      await fetchKeys();
+      return { key: result.key, agent_id: result.agent_id };
+    } finally {
+      createInFlight.current = false;
+    }
   }, [fetchKeys]);
 
   const revokeKey = useCallback(async (agentId: string): Promise<boolean> => {

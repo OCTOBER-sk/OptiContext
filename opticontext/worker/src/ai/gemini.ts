@@ -360,14 +360,14 @@ Return valid JSON with these keys:
 
 /**
  * Generates embeddings for text using Gemini's embedding model.
- * Returns a 768-dimensional float vector.
- * Schema uses VECTOR(768) — aligned.
+ * Uses outputDimensionality=768 to match the schema VECTOR(768).
+ * Without this parameter, gemini-embedding-2 returns 3072 dimensions.
  */
 export async function embedText(text: string): Promise<number[]> {
   const key1 = getEnv().GEMINI_API_KEY;
   if (!key1) {
     logger.warn("[Gemini Embedding] GEMINI_API_KEY not set — returning zero vector");
-    return new Array(768).fill(0);
+    return new Array(768).fill(0); // VECTOR(768) — see outputDimensionality below
   }
 
   const budgetAllowed = await checkGeminiBudget("gemini-embedding-2");
@@ -385,6 +385,7 @@ export async function embedText(text: string): Promise<number[]> {
       body: JSON.stringify({
         model: "models/gemini-embedding-2",
         content: { parts: [{ text }] },
+        outputDimensionality: 768,
       }),
     });
 

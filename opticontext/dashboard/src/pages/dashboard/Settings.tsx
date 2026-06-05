@@ -9,6 +9,7 @@ import { StatusChip } from '../../components/ui/StatusChip';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useApiKeys } from '../../hooks/useApiKeys';
 import { VALIDATION } from '../../lib/validation';
+import SetupPrompt from '../../components/ui/SetupPrompt';
 import { BUTTONS, LOADING, CONFIRMATIONS, EMPTY_STATES, TOOLTIPS, OPERATIONAL } from '../../lib/microcopy';
 
 interface SettingsProps {
@@ -16,7 +17,10 @@ interface SettingsProps {
 }
 
 function maskAgentId(agentId: string): string {
-  return `opctx_${agentId.slice(0, 5)}_${'\u2588'.repeat(24)}${agentId.slice(-4)}`;
+  const reveal = Math.min(5, Math.floor(agentId.length / 2));
+  const prefix = agentId.slice(0, reveal);
+  const suffix = agentId.slice(-reveal);
+  return `opctx_${prefix}_${'\u2588'.repeat(24)}${suffix}`;
 }
 
 export default function Settings({ user }: SettingsProps) {
@@ -210,6 +214,7 @@ export default function Settings({ user }: SettingsProps) {
             <code style={{ display: 'block', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--base)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 16px', wordBreak: 'break-all', marginBottom: 12 }}>
               {newlyCreatedKey}
             </code>
+            <SetupPrompt apiKey={newlyCreatedKey} />
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <button
                 onClick={() => { copyToClipboard(newlyCreatedKey, 'newly-created'); setNewKeyCopied(true); }}

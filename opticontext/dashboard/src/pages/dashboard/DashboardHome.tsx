@@ -74,8 +74,9 @@ export default function DashboardHome({ user }: DashboardHomeProps) {
     }
   };
 
+  const reveal = selectedKey ? Math.min(5, Math.floor(selectedKey.agent_id.length / 2)) : 0;
   const maskedKey = selectedKey
-    ? `opctx_${selectedKey.agent_id.slice(0, Math.min(5, selectedKey.agent_id.length - 4))}_${'\u2588'.repeat(24)}${selectedKey.agent_id.length > 4 ? selectedKey.agent_id.slice(-4) : selectedKey.agent_id}`
+    ? `opctx_${selectedKey.agent_id.slice(0, reveal)}_${'\u2588'.repeat(24)}${selectedKey.agent_id.slice(-reveal)}`
     : '';
 
   const copyToClipboard = async (text: string, setter: (v: boolean) => void) => {

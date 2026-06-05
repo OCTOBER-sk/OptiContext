@@ -425,6 +425,30 @@ export const turso = {
     return revokedCount;
   },
 
+  async getActiveKeyCount(agent_id: string): Promise<number> {
+    const rows = await query(
+      `SELECT COUNT(*) as n FROM api_keys WHERE agent_id = ? AND revoked = 0`,
+      [agent_id],
+    );
+    return Number(rows[0]?.n ?? 0);
+  },
+
+  async deleteAgentKeys(agent_id: string): Promise<void> {
+    await query(`DELETE FROM api_keys WHERE agent_id = ?`, [agent_id]);
+  },
+
+  async updateAgentRegistry(
+    agent_id: string,
+    display_name: string,
+    owner_email: string,
+    allowed_tools: string[],
+  ): Promise<void> {
+    await query(
+      `UPDATE agent_registry SET display_name = ?, owner_email = ?, allowed_tools = ? WHERE agent_id = ?`,
+      [display_name, owner_email, JSON.stringify(allowed_tools), agent_id],
+    );
+  },
+
   async storeFileRecord(
     record: UploadedFileRecord,
   ): Promise<void> {

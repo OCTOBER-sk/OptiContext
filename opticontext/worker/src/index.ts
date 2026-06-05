@@ -527,6 +527,39 @@ async function handleAdminCreateAgent(
       // Check if the collision is with the same user's own agent
       const existing = await turso.getAgentOwner(agentId);
       if (existing === email) {
+        // Agent exists — check if all keys are revoked (allow re-create)
+        const activeCount = await turso.getActiveKeyCount(agentId);
+        if (activeCount === 0) {
+          // All keys revoked — re-create: clean old keys, update registry,
+          // store new key hash, upsert Supabase, clear revoked KV flag.
+          await turso.deleteAgentKeys(agentId);
+          await turso.updateAgentRegistry(agentId, body.display_name, email, allowedTools);
+          const keyHash = await cryptoUtil.hashString(apiKey);
+          await turso.storeKeyHash(keyHash, agentId);
+          await supabase.upsertAgentProfile({
+            agent_id: agentId,
+            display_name: body.display_name,
+            owner_email: email,
+            allowed_tools: allowedTools,
+            tier: authInfo.tier,
+            settings: {},
+          });
+          await kv.delete("API_KEYS", `revoked_agent:${agentId}`);
+          logger.info("Admin: agent re-created after revoke", { agent_id: agentId });
+          return jsonResponse(
+            {
+              key: apiKey,
+              agent_id: agentId,
+              display_name: body.display_name,
+              allowed_tools: allowedTools,
+              tier: authInfo.tier,
+              rate_limits: authInfo.rate_limits,
+              warning: "Store this key securely. It will not be shown again.",
+            },
+            201,
+            request,
+          );
+        }
         return jsonResponse({ error: "An agent with this name already exists in your account" }, 409, request);
       }
       // Collision with another user — retry with a deduplicated ID (up to 3 attempts)

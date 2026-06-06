@@ -7,6 +7,7 @@ import { kv } from "./storage/kv";
 import { turso } from "./storage/turso";
 import { supabase } from "./storage/supabase";
 import { logger } from "./utils/logger";
+import { captureError } from "./utils/monitoring";
 import { corsHeaders, corsPreflightHeaders } from "./utils/cors";
 import cryptoUtil from "./utils/crypto";
 import { GUIDE } from "./tools/guide";
@@ -105,6 +106,12 @@ export default {
       logger.error("Unhandled request error", {
         error: errMsg,
         stack: errStack,
+        path: pathname,
+        method: request.method,
+        latency_ms: Date.now() - startTime,
+      });
+      captureError(err, {
+        where: "fetch_handler",
         path: pathname,
         method: request.method,
         latency_ms: Date.now() - startTime,

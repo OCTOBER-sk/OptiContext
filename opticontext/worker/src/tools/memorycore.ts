@@ -69,7 +69,13 @@ export async function handleMemory(
         },
       ],
       isError: true,
-      meta: { latency_ms: Date.now() - startTime },
+      meta: {
+        latency_ms: Date.now() - startTime,
+        total_duration_ms: Date.now() - startTime,
+        provider_used: "gemini",
+        cache_hit: false,
+        fallback_used: false,
+      },
     };
   }
 }
@@ -202,8 +208,11 @@ async function handleWrite(
     ],
     meta: {
       latency_ms: Date.now() - startTime,
+      total_duration_ms: Date.now() - startTime,
       tokens_used: tokensUsed,
       provider_used: "gemini",
+      cache_hit: false,
+      fallback_used: false,
     },
   };
 }
@@ -272,7 +281,10 @@ async function handleSearch(
     ],
     meta: {
       latency_ms: Date.now() - startTime,
-      provider_used: "gemini",
+      total_duration_ms: Date.now() - startTime,
+      provider_used: shouldRerank ? `${"gemini"}+${"cerebras"}` : "gemini",
+      cache_hit: false,
+      fallback_used: false,
     },
   };
 }

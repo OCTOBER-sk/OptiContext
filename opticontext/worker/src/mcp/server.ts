@@ -1,5 +1,5 @@
 import { verifyApiKey, AgentAuthInfo, extractBearerToken } from "../auth/verify";
-import { checkRateLimit } from "../auth/ratelimit";
+import { checkRateLimit, getRateLimitStatus } from "../auth/ratelimit";
 import { getToolHandler, resolveToolName, checkToolPermission } from "./router";
 import type { ToolCallResult } from "./router";
 import { TOOL_SCHEMAS } from "./schemas";
@@ -8,6 +8,7 @@ import { logger } from "../utils/logger";
 import { corsHeaders } from "../utils/cors";
 import { getEnv } from "../context";
 import { OptiContextError } from "../utils/errors";
+import { captureError } from "../utils/monitoring";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 
 const MAX_JSON_BODY_BYTES = 1 * 1024 * 1024;
@@ -122,6 +123,10 @@ export async function handleMCPRequest(
     const latency = Date.now() - startTime;
     logger.error("MCP request failed", {
       error: err instanceof Error ? err.message : "Unknown",
+      latency_ms: latency,
+    });
+    captureError(err, {
+      where: "mcp_request",
       latency_ms: latency,
     });
 
@@ -276,6 +281,11 @@ async function handleToolCall(
     // Unhandled errors — return as JSON-RPC internal error, not HTTP 500
     const message = err instanceof Error ? err.message : "Unknown tool error";
     logger.error("Unhandled tool error", { tool: toolName, error: message });
+    captureError(err, {
+      where: "tool_call",
+      tool: toolName,
+      agent_id: authInfo.agent_id,
+    });
     return {
       jsonrpc: "2.0",
       id,
@@ -284,6 +294,22 @@ async function handleToolCall(
   }
 
   const latency = Date.now() - startTime;
+
+  // Surface rate-limit visibility to the caller. Read-only — does not
+  // increment any counters. Safe to fail: we never want telemetry to
+  // mask a successful tool response.
+  let rateLimitMeta: Record<string, unknown> | null = null;
+  try {
+    const status = await getRateLimitStatus(authInfo.agent_id, authInfo.rate_limits);
+    rateLimitMeta = {
+      rate_limit_remaining_minute: status.minute_remaining,
+      rate_limit_remaining_day: status.day_remaining,
+      retry_after_sec: status.retry_after_sec,
+    };
+  } catch (err) {
+    // Non-fatal — log and continue
+    captureError(err, { where: "rate_limit_status", tool: toolName, agent_id: authInfo.agent_id });
+  }
 
   // Log asynchronously — never blocks the response
   const logPromise = turso.logRequest({
@@ -303,13 +329,21 @@ async function handleToolCall(
     logger.debug("Session context", { agent_id: authInfo.agent_id, session_id: sessionId, tool: toolName });
   }
 
+  // Merge tool-level meta with cross-cutting rate-limit meta. Tool-level
+  // fields win on conflict (in case a future tool exposes its own rate
+  // limit). Backwards compatible: existing fields are preserved.
+  const combinedMeta: Record<string, unknown> = {
+    ...(rateLimitMeta ?? {}),
+    ...(toolResult.meta ?? {}),
+  };
+
   return {
     jsonrpc: "2.0",
     id,
     result: {
       content: toolResult.content,
       isError: toolResult.isError ?? false,
-      ...(toolResult.meta ? { _meta: toolResult.meta } : {}),
+      ...(Object.keys(combinedMeta).length > 0 ? { _meta: combinedMeta } : {}),
     },
   };
 }

@@ -19,6 +19,14 @@ export interface ToolCallResult {
     provider_used?: string;
     topic?: string;
     file_id?: string;
+    /** Total wall-clock time spent in the tool handler (ms). */
+    total_duration_ms?: number;
+    /** True if the result was served from cache (KV or R2). */
+    cache_hit?: boolean;
+    /** True if a primary provider was unavailable and a fallback was used. */
+    fallback_used?: boolean;
+    /** ISO 8601 timestamp after which persisted resources (e.g. file_id) become invalid. */
+    expires_at?: string;
   };
 }
 

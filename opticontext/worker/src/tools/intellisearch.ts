@@ -17,6 +17,12 @@ export async function handleSearch(
   const startTime = Date.now();
   const { query, mode, max_results: maxResults, summarize: shouldSummarize, dork: dorkParams } = validateArgs(searchSchema, args);
 
+  // Hoisted so the catch block can include them in error telemetry
+  // without re-declaring.
+  let providerUsed = "unknown";
+  let cacheHit = false;
+  let fallbackUsed = false;
+
   try {
     const cacheKey = `search_cache:${await crypto.hashString(query + String(maxResults) + JSON.stringify(dorkParams) + mode + (shouldSummarize ? "s" : "r"))}`;
     const cached = await kv.get("CACHE", cacheKey);
@@ -24,7 +30,13 @@ export async function handleSearch(
       logger.info("Search cache hit", { agent_id: auth.agent_id });
       return {
         content: [{ type: "text", text: cached }],
-        meta: { latency_ms: Date.now() - startTime, provider_used: "cache" },
+        meta: {
+          latency_ms: Date.now() - startTime,
+          total_duration_ms: Date.now() - startTime,
+          provider_used: "cache",
+          cache_hit: true,
+          fallback_used: false,
+        },
       };
     }
 
@@ -36,7 +48,6 @@ export async function handleSearch(
     }
 
     let results: string;
-    let providerUsed: string;
 
     switch (mode) {
       case "research": {
@@ -88,6 +99,7 @@ export async function handleSearch(
           results = formatTavilyResults(tavilyResult.results);
           providerUsed = tavilyResult.provider;
         } else {
+          fallbackUsed = true;
           const ddgResult = await ddg.search(finalQuery, maxResults);
           if (ddgResult.results.length > 0) {
             results = formatDDGResults(ddgResult.results);
@@ -117,6 +129,28 @@ export async function handleSearch(
         tokens_used: aiResult.tokens_used,
         provider: aiResult.provider_used,
       });
+
+      // Phantom-answer suppression: when the AI returns zero sources AND
+      // low confidence, replace the synthesized answer with a structured
+      // warning that asks the caller to retry with research mode.
+      const lowConfidence = detectLowConfidence(finalResponse);
+      if (lowConfidence.isLowConfidence) {
+        logger.warn("Phantom-answer suppressed", {
+          agent_id: auth.agent_id,
+          mode,
+          provider_used: providerUsed,
+          confidence: lowConfidence.confidence,
+          sources_count: lowConfidence.sourcesCount,
+        });
+        finalResponse = JSON.stringify({
+          summary: null,
+          low_confidence_warning:
+            "No reliable sources found. Retry using research mode.",
+          requires_research_mode: true,
+          confidence: lowConfidence.confidence,
+          sources_count: lowConfidence.sourcesCount,
+        });
+      }
     }
 
     await kv.put("CACHE", cacheKey, finalResponse, { expirationTtl: 900 });
@@ -126,7 +160,10 @@ export async function handleSearch(
       content: [{ type: "text", text: finalResponse }],
       meta: {
         latency_ms: latency,
+        total_duration_ms: latency,
         provider_used: providerUsed,
+        cache_hit: cacheHit,
+        fallback_used: fallbackUsed,
       },
     };
   } catch (err) {
@@ -146,9 +183,60 @@ export async function handleSearch(
         },
       ],
       isError: true,
-      meta: { latency_ms: Date.now() - startTime },
+      meta: {
+        latency_ms: Date.now() - startTime,
+        total_duration_ms: Date.now() - startTime,
+        provider_used: providerUsed,
+        cache_hit: cacheHit,
+        fallback_used: fallbackUsed,
+      },
     };
   }
+}
+
+/**
+ * Parses an AI-summarized search response and reports whether it
+ * constitutes a "phantom answer" — i.e. a confident-sounding summary
+ * produced without any backing source URLs.
+ *
+ * Returns `isLowConfidence: true` when BOTH conditions hold:
+ *   - `sources` is empty (or absent)
+ *   - `confidence` is below 0.3
+ *
+ * The function is tolerant of non-JSON, partial JSON, or JSON wrapped
+ * in code fences — anything we can't parse is treated as "not phantom"
+ * (so we never accidentally suppress a real answer just because the
+ * model added markdown formatting).
+ */
+export function detectLowConfidence(
+  aiResponse: string,
+): { isLowConfidence: boolean; confidence: number; sourcesCount: number } {
+  if (!aiResponse || typeof aiResponse !== "string") {
+    return { isLowConfidence: false, confidence: 1, sourcesCount: 0 };
+  }
+
+  // Strip code fences if the model wrapped JSON in markdown
+  const stripped = aiResponse
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+
+  let parsed: { sources?: unknown; confidence?: unknown } | null = null;
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    return { isLowConfidence: false, confidence: 1, sourcesCount: 0 };
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    return { isLowConfidence: false, confidence: 1, sourcesCount: 0 };
+  }
+
+  const sources = Array.isArray(parsed.sources) ? parsed.sources : [];
+  const confidence = typeof parsed.confidence === "number" ? parsed.confidence : 1;
+
+  const isLowConfidence = sources.length === 0 && confidence < 0.3;
+  return { isLowConfidence, confidence, sourcesCount: sources.length };
 }
 
 function formatTavilyResults(

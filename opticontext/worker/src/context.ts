@@ -55,6 +55,11 @@ export interface Env {
 
   // MCP Tool timeout (ms), default 180000 (3 min)
   MCP_TOOL_TIMEOUT_MS?: string;
+
+  // Optional: HTTP webhook URL for monitoring/observability. If set,
+  // worker errors are POSTed here in addition to the local structured
+  // log. Compatible with Sentry / Better Stack / Logflare ingest.
+  MONITORING_WEBHOOK_URL?: string;
 }
 
 let _env: Env | null = null;

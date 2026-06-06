@@ -12,6 +12,8 @@ import { safeFetch, validateFetchUrl, sanitizeFilename, safeExtension, validateM
 import { analyzeSchema, validateArgs } from "../mcp/validation";
 
 const MAX_INLINE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+const PERSISTED_FILE_TTL_SEC = 30 * 24 * 60 * 60; // 30 days — matches KV expirationTtl for file_idx
+const UPLOAD_FILE_TTL_SEC = 24 * 60 * 60;          // 24 hours — matches /upload contract
 
 const SUPPORTED_MIME_TYPES: Record<string, string> = {
   pdf: "application/pdf",
@@ -83,12 +85,18 @@ export async function handleAnalyze(
     return errorResult("One of file_url, file_b64, upload_id, or file_id is required");
   }
 
+  // Hoisted so the catch block can include them in error telemetry
+  // without re-declaring.
+  let fileExpiresAt: string | null = null;
+
   try {
     let fileData: ArrayBuffer | null = null;
     let mimeType = "text/plain";
     let filename = "unknown";
     let geminiFileUri: string | null = null;
     let returnedFileId: string | null = null;
+    let geminiUriCacheHit = false;
+    let fallbackUsed = false;
 
     // ── File intake ──────────────────────────────────────────────────
     if (hasFileId) {
@@ -101,6 +109,7 @@ export async function handleAnalyze(
         file_id: string; agent_id: string; filename: string;
         mime_type: string; file_size: number; r2_key: string;
         gemini_file_uri?: string; gemini_expires_at?: string;
+        expires_at?: string; created_at?: string;
       }>("CACHE", `file_idx:${auth.agent_id}:${rawFileId}`);
       if (!record) {
         const tRecord = await turso.getFileRecord(rawFileId, auth.agent_id);
@@ -120,9 +129,18 @@ export async function handleAnalyze(
       filename = record.filename;
       mimeType = record.mime_type;
 
+      // Surface expiration: prefer record.expires_at (new records); fall back
+      // to 30-day window from now for legacy records (safe lower bound).
+      if (record.expires_at) {
+        fileExpiresAt = record.expires_at;
+      } else {
+        fileExpiresAt = new Date(Date.now() + PERSISTED_FILE_TTL_SEC * 1000).toISOString();
+      }
+
       // Check for cached Gemini file URI (avoids re-upload within 48h window)
       if (record.gemini_file_uri && record.gemini_expires_at && new Date(record.gemini_expires_at) > new Date()) {
         geminiFileUri = record.gemini_file_uri;
+        geminiUriCacheHit = true;
       }
     } else if (hasUploadId) {
       const rawId = String(upload_id);
@@ -143,14 +161,25 @@ export async function handleAnalyze(
         return {
           content: [{ type: "text", text: JSON.stringify({
             error: "UPLOAD_EXPIRED — The upload_id has expired (24-hour window). Re-upload the file and retry immediately.",
+            expires_at: expiresAtStr,
           }) }],
           isError: true,
+          meta: {
+            latency_ms: Date.now() - startTime,
+            total_duration_ms: Date.now() - startTime,
+            provider_used: "gemini",
+            cache_hit: false,
+            fallback_used: false,
+            expires_at: expiresAtStr,
+          },
         };
       }
 
       fileData = await r2Object.arrayBuffer();
       filename = r2Object.customMetadata?.filename ?? String(upload_id);
       mimeType = r2Object.customMetadata?.mimeType ?? detectMimeType(filename);
+      // Surface 24h upload window — file will be re-persisted below with its own 30d TTL
+      fileExpiresAt = expiresAtStr ?? new Date(Date.now() + UPLOAD_FILE_TTL_SEC * 1000).toISOString();
       // Delete temp upload — file will be persisted below
       r2.delete("files", r2Key).catch(() => {});
     } else if (hasFileB64) {
@@ -200,9 +229,11 @@ export async function handleAnalyze(
     if (hasFileB64 || hasUploadId || hasFileUrl) {
       const fileId = cryptoUtils.randomHex(12);
       const persistKey = `persist/${auth.agent_id}/${fileId}`;
+      const createdAt = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + PERSISTED_FILE_TTL_SEC * 1000).toISOString();
 
       await r2.put("files", persistKey, fileData, {
-        customMetadata: { filename, mimeType, agent_id: auth.agent_id },
+        customMetadata: { filename, mimeType, agent_id: auth.agent_id, expires_at: expiresAt },
       });
 
       const fileMeta = {
@@ -214,6 +245,8 @@ export async function handleAnalyze(
         r2_key: persistKey,
         gemini_file_uri: undefined as string | undefined,
         gemini_expires_at: undefined as string | undefined,
+        created_at: createdAt,
+        expires_at: expiresAt,
       };
 
       // Write KV index eagerly — this is the primary lookup path for file_id.
@@ -229,6 +262,8 @@ export async function handleAnalyze(
       });
 
       returnedFileId = fileId;
+      // Newly persisted files inherit the 30-day TTL window
+      fileExpiresAt = expiresAt;
     }
 
     // ── Model selection ──────────────────────────────────────────────
@@ -337,9 +372,13 @@ export async function handleAnalyze(
       content: [{ type: "text", text: resultContent }],
       meta: {
         latency_ms: Date.now() - startTime,
+        total_duration_ms: Date.now() - startTime,
         tokens_used: analysis.tokens_used,
-        provider_used: "gemini",
+        provider_used: selectedModel,
+        cache_hit: geminiUriCacheHit,
+        fallback_used: false,
         ...(returnedFileId ? { file_id: returnedFileId } : {}),
+        ...(fileExpiresAt ? { expires_at: fileExpiresAt } : {}),
       },
     };
   } catch (err) {
@@ -359,7 +398,14 @@ export async function handleAnalyze(
         },
       ],
       isError: true,
-      meta: { latency_ms: Date.now() - startTime },
+      meta: {
+        latency_ms: Date.now() - startTime,
+        total_duration_ms: Date.now() - startTime,
+        provider_used: "gemini",
+        cache_hit: false,
+        fallback_used: false,
+        ...(fileExpiresAt ? { expires_at: fileExpiresAt } : {}),
+      },
     };
   }
 }

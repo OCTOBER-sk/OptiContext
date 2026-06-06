@@ -186,6 +186,11 @@ export async function handleTTS(
       };
     });
 
+    // Cache-hit classification: every segment was served from cache.
+    // Mixed (some cached, some fresh) is reported as false because the
+    // caller still paid for the fresh synthesis.
+    const allCached = segments.length > 0 && segments.every((s) => s.audioUrl && !s.audioBuffer);
+
     const totalDuration = segments.reduce((sum, s) => sum + s.durationMs, 0);
     const responsePayload: Record<string, unknown> = {
       total_duration_ms: totalDuration,
@@ -217,7 +222,13 @@ export async function handleTTS(
 
     return {
       content: [{ type: "text", text: JSON.stringify(responsePayload) }],
-      meta: { latency_ms: Date.now() - startTime, provider_used: segments.some((s) => s.audioBuffer) ? "unrealspeech" : "mock" },
+      meta: {
+        latency_ms: Date.now() - startTime,
+        total_duration_ms: Date.now() - startTime,
+        provider_used: segments.some((s) => s.audioBuffer) ? "unrealspeech" : "mock",
+        cache_hit: allCached,
+        fallback_used: false,
+      },
     };
   } catch (err) {
     logger.error("VoiceBridge failed", {
@@ -230,7 +241,13 @@ export async function handleTTS(
         { type: "text", text: JSON.stringify({ error: "TTS failed", message: err instanceof Error ? err.message : "Unknown error" }) },
       ],
       isError: true,
-      meta: { latency_ms: Date.now() - startTime },
+      meta: {
+        latency_ms: Date.now() - startTime,
+        total_duration_ms: Date.now() - startTime,
+        provider_used: "unrealspeech",
+        cache_hit: false,
+        fallback_used: false,
+      },
     };
   }
 }

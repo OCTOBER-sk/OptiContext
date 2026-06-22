@@ -210,7 +210,7 @@ export function HeroSection() {
                 className="copy-button"
                 style={{ position: 'static', opacity: 1 }}
                 onClick={() => {
-                  navigator.clipboard.writeText(`{\n  "mcpServers": {\n    "opticontext": {\n      "url": "https://mcp.opticontext.dev/mcp",\n      "transport": "streamable-http",\n      "headers": {\n        "Authorization": "Bearer YOUR_AGENT_KEY"\n      }\n    }\n  }\n}`);
+                  navigator.clipboard.writeText(`{\n  "mcpServers": {\n    "opticontext": {\n      "url": "https://opticontext.opticontext.workers.dev/mcp",\n      "transport": "streamable-http",\n      "headers": {\n        "Authorization": "Bearer YOUR_AGENT_KEY"\n      }\n    }\n  }\n}`);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1500);
                 }}
@@ -226,7 +226,7 @@ export function HeroSection() {
                 <span style={{ color: 'var(--code-muted)' }}>{'    "opticontext": {'}</span>{'\n'}
                 <span style={{ color: 'var(--code-accent)' }}>{'      "url"'}</span>
                 <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"https://mcp.opticontext.dev/mcp"'}</span>
+                <span style={{ color: 'var(--code-string)' }}>{'"https://opticontext.opticontext.workers.dev/mcp"'}</span>
                 <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
                 <span style={{ color: 'var(--code-accent)' }}>{'      "transport"'}</span>
                 <span style={{ color: 'var(--code-text)' }}>{': '}</span>

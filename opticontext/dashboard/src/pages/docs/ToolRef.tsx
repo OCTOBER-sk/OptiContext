@@ -347,7 +347,7 @@ IntelliSearch gives every MCP-compatible runtime live web access through a singl
     examples: [
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -364,7 +364,7 @@ IntelliSearch gives every MCP-compatible runtime live web access through a singl
       },
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -516,7 +516,7 @@ VoiceBridge resolves this to a single capability call that returns a ready-to-se
     examples: [
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -535,7 +535,7 @@ VoiceBridge resolves this to a single capability call that returns a ready-to-se
       },
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -596,7 +596,7 @@ DeepDoc resolves file intake, model routing, structured extraction, and optional
     preFlow: {
       intro: 'For files too large to send as base64 (recommended threshold: > 5MB), use the /upload endpoint first.',
       blocks: [
-        { label: 'bash \u2014 POST /upload', code: `curl -X POST https://mcp.opticontext.dev/upload \\
+        { label: 'bash \u2014 POST /upload', code: `curl -X POST https://opticontext.opticontext.workers.dev/upload \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -F "file=@/path/to/report.pdf"` },
         { label: '/upload response', code: `{
@@ -707,7 +707,7 @@ DeepDoc resolves file intake, model routing, structured extraction, and optional
     examples: [
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -726,7 +726,7 @@ DeepDoc resolves file intake, model routing, structured extraction, and optional
       },
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -839,7 +839,7 @@ MemoryCore resolves this with two capability calls: one to store, one to retriev
     examples: [
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{
@@ -859,7 +859,7 @@ MemoryCore resolves this with two capability calls: one to store, one to retriev
       },
       {
         label: 'bash',
-        code: `curl -X POST https://mcp.opticontext.dev/mcp \\
+        code: `curl -X POST https://opticontext.opticontext.workers.dev/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -d '{

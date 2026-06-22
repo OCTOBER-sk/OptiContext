@@ -336,7 +336,7 @@ export default function ApiRef() {
           <strong>URL:</strong>
         </p>
         <div style={{ marginBottom: 16 }}>
-          <CodeBlock code="https://mcp.opticontext.dev/mcp" compact />
+          <CodeBlock code="https://opticontext.opticontext.workers.dev/mcp" compact />
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
           <strong>Required headers:</strong>
@@ -372,7 +372,7 @@ export default function ApiRef() {
           <strong>URL:</strong>
         </p>
         <div style={{ marginBottom: 16 }}>
-          <CodeBlock code="https://mcp.opticontext.dev/upload" compact />
+          <CodeBlock code="https://opticontext.opticontext.workers.dev/upload" compact />
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
           <strong>Required headers:</strong>
@@ -416,7 +416,7 @@ export default function ApiRef() {
           <strong>URL:</strong>
         </p>
         <div style={{ marginBottom: 16 }}>
-          <CodeBlock code="https://mcp.opticontext.dev/usage" compact />
+          <CodeBlock code="https://opticontext.opticontext.workers.dev/usage" compact />
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
           <strong>Required headers:</strong>
@@ -455,7 +455,7 @@ export default function ApiRef() {
           <strong>URL:</strong>
         </p>
         <div style={{ marginBottom: 16 }}>
-          <CodeBlock code="https://mcp.opticontext.dev/health" compact />
+          <CodeBlock code="https://opticontext.opticontext.workers.dev/health" compact />
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
           <strong>Response:</strong>
@@ -1323,7 +1323,7 @@ Step 2: POST /mcp (opticontext_analyze with upload_id) → receive file_id + ana
 
         <SubHeading>Step 1 — Upload the file</SubHeading>
         <div style={{ marginBottom: 16 }}>
-          <CodeBlock code={`curl -X POST https://mcp.opticontext.dev/upload \\
+          <CodeBlock code={`curl -X POST https://opticontext.opticontext.workers.dev/upload \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -F "file=@/path/to/report.pdf"`} label="bash — POST /upload" />
         </div>

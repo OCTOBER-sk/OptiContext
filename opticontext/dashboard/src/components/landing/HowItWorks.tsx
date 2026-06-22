@@ -5,7 +5,7 @@ const STEPS = [
   { number: '01', title: 'Create an account', text: 'Sign in with Google. No form. No card. Under 10 seconds.' },
   { number: '02', title: 'Get your agent key', text: 'Generate an agent key from the dashboard. Each key is scoped to one runtime.' },
   { number: '03', title: 'Add to your runtime config', text: 'One configuration block in your MCP config file points to the OptiContext endpoint.' },
-  { number: '04', title: 'Call the endpoint', text: 'Your agent calls POST https://mcp.opticontext.dev/mcp using JSON-RPC 2.0.' },
+  { number: '04', title: 'Call the endpoint', text: 'Your agent calls POST https://opticontext.opticontext.workers.dev/mcp using JSON-RPC 2.0.' },
   { number: '05', title: 'Get results at the edge', text: 'OptiContext resolves the capability call from Cloudflare\'s global network and returns structured output.' },
 ];
 

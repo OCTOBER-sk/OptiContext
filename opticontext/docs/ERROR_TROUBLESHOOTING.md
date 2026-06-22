@@ -354,22 +354,22 @@ For higher-volume workloads, distribute requests across multiple agent keys. Eac
 
 ---
 
-## PROVIDER_UNAVAILABLE — `-32040`
+## SEARCH_UNAVAILABLE — `error.code: SEARCH_UNAVAILABLE`
 
 ### What happened
 
-IntelliSearch attempted to route the query through all available search providers (Tavily, DuckDuckGo, Apify) and all failed to return a valid response.
+Web search could not return a valid response for this request.
 
 ### Why it happened
 
 One of:
-- All three providers returned errors or empty results simultaneously (rare).
-- DuckDuckGo's rate jitter was active at the exact moment of the request.
-- The query contained characters or patterns that all providers rejected.
+- All internal search paths returned errors or empty results simultaneously (rare).
+- A transient rate-limit or throttling event was active at the moment of the request.
+- The query contained characters or patterns that all search paths rejected.
 
 ### Resolution
 
-Retry with `"mode": "fast"` to force DuckDuckGo directly:
+Retry the call. If the issue persists, simplify the query and try again with a different `mode` (e.g. `fast` instead of `auto` or `research`).
 
 ```json
 {
@@ -392,47 +392,53 @@ If retries continue to fail, the query may contain characters that providers are
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "error": {
-    "code": -32040,
-    "message": "PROVIDER_UNAVAILABLE — All search providers failed to return results. Retry with mode: fast to route directly to DuckDuckGo."
-  },
-  "id": 1
+  "isError": true,
+  "content": [{
+    "type": "text",
+    "text": "{\"error\":\"SEARCH_UNAVAILABLE\",\"message\":\"Search is temporarily unavailable.\",\"retry_hint\":\"Retry in a few seconds.\"}"
+  }],
+  "_meta": {
+    "latency_ms": 1234,
+    "provider_used": "search",
+    "fallback_used": false
+  }
 }
 ```
 
-*JetBrains Mono · 14px · Code surface · Top bar: `PROVIDER_UNAVAILABLE error` · Copy button*
+*JetBrains Mono · 14px · Code surface · Top bar: `SEARCH_UNAVAILABLE error` · Copy button*
 
 ---
 
-## BUDGET_GUARD_ACTIVE — `-32041`
+## RATE_LIMITED — `error.code: RATE_LIMITED`
 
 ### What happened
 
-Tavily monthly credits have reached or exceeded 800 of 1,000. IntelliSearch routed the request through DuckDuckGo automatically.
+Web search was temporarily rate-limited.
 
 ### Why it happened
 
-This is an informational response, not a failure. The budget guard is proactive — it switches providers before the hard limit is reached so the runtime receives a valid response rather than an error. The `provider_used` field in the response will show `"ddg"`.
+The agent exceeded the per-minute or daily search budget. Budget guards throttle requests proactively to prevent hard quota failures.
 
 ### Resolution
 
-No action required. The request was fulfilled. The `provider_used` field indicates which provider resolved it.
+Wait and retry. The throttling window is short (per-minute) for transient limits and short (daily) for cumulative limits. No action required beyond retrying.
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "error": {
-    "code": -32041,
-    "message": "BUDGET_GUARD_ACTIVE — Tavily credits at 847/1000 for this month. Request routed to DuckDuckGo. No action required."
-  },
-  "id": 1
+  "isError": true,
+  "content": [{
+    "type": "text",
+    "text": "{\"error\":\"RATE_LIMITED\",\"message\":\"Search is temporarily rate-limited.\",\"retry_hint\":\"Retry in a few seconds, or reduce request frequency.\"}"
+  }],
+  "_meta": {
+    "latency_ms": 12,
+    "provider_used": "search",
+    "fallback_used": false
+  }
 }
 ```
 
-*JetBrains Mono · 14px · Code surface · Top bar: `BUDGET_GUARD_ACTIVE` · Copy button*
-
-**Note:** `-32041` is returned alongside a valid result. The `result` field is populated. The `error` field is informational only. Runtimes that treat any `error` field as a failure condition should check for `-32041` specifically and handle it as a warning, not a failure.
+*JetBrains Mono · 14px · Code surface · Top bar: `RATE_LIMITED error` · Copy button*
 
 ---
 
@@ -831,7 +837,7 @@ Use `POST /upload` with `Content-Type: multipart/form-data` for files over 100MB
 Do not base64-encode large files and embed them in `file_b64` — this inflates the size by ~33% and will exceed the inline limit.
 
 ```bash
-curl -X POST https://mcp.opticontext.dev/upload \
+curl -X POST https://opticontext.opticontext.workers.dev/upload \
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \
   -F "file=@/path/to/large_report.pdf"
 ```
@@ -1015,7 +1021,7 @@ The runtime cannot reach the MCP endpoint.
 
 ### Diagnostic steps
 
-1. Verify the endpoint URL is exactly `https://mcp.opticontext.dev/mcp` — no trailing slash, no path variation.
+1. Verify the endpoint URL is exactly `https://opticontext.opticontext.workers.dev/mcp` — no trailing slash, no path variation.
 2. Check the transport is set to `streamable-http`. HTTP+SSE runtimes should use the `/sse` endpoint instead.
 3. Confirm the `Authorization` header is present in the runtime config.
 
@@ -1055,8 +1061,8 @@ OptiContext supports both transport versions:
 
 | Transport | Endpoint | MCP spec version |
 |---|---|---|
-| Streamable HTTP (current) | `POST https://mcp.opticontext.dev/mcp` | MCP 2025-11-25 |
-| HTTP+SSE (legacy) | `GET https://mcp.opticontext.dev/sse` | MCP 2025-03-26 |
+| Streamable HTTP (current) | `POST https://opticontext.opticontext.workers.dev/mcp` | MCP 2025-11-25 |
+| HTTP+SSE (legacy) | `GET https://opticontext.opticontext.workers.dev/sse` | MCP 2025-03-26 |
 
 Runtimes using HTTP+SSE should point to the `/sse` endpoint. All capabilities are available on both transports. If your runtime only supports the older spec, no capability degradation applies — OptiContext maintains both endpoints.
 
@@ -1166,7 +1172,7 @@ Check the input schema for the capability in the capability documentation at `/d
 Before diagnosing request failures, verify the OptiContext edge server is reachable:
 
 ```bash
-curl https://mcp.opticontext.dev/health
+curl https://opticontext.opticontext.workers.dev/health
 ```
 
 *JetBrains Mono · 14px · Code surface · Top bar: `bash` · Copy button*
@@ -1185,7 +1191,7 @@ Expected response:
 
 `/health` requires no authentication. If this request fails:
 - The failure is at the network or Cloudflare layer — not at the capability or auth layer.
-- Check for DNS resolution failures, firewall rules blocking `mcp.opticontext.dev`, or local network restrictions.
+- Check for DNS resolution failures, firewall rules blocking `opticontext.opticontext.workers.dev`, or local network restrictions.
 
 ---
 
@@ -1265,25 +1271,20 @@ No configuration change needed. Subsequent requests within the same session will
 
 | Error code | Name | Retry? | Strategy |
 |---|---|---|---|
-| `-32001` | `UNAUTHORIZED` | No | Fix the credential before retrying. |
+| `-32001` | `AUTH_ERROR` | No | Fix the credential before retrying. |
 | `-32001` | `KEY_NOT_FOUND` | No | Verify or recreate the key before retrying. |
 | `-32001` | `KEY_REVOKED` | No | Create a new key. The revoked key will never succeed. |
-| `-32003` | `FORBIDDEN` | No | Fix the key permissions before retrying. |
-| `-32029` | `RATE_LIMITED` | After reset | Wait for the reset time stated in the error. Do not retry before then. |
-| `-32030` | `DAILY_CAP_REACHED` | After 00:00 UTC | Do not retry until the daily cap resets. |
-| `-32040` | `PROVIDER_UNAVAILABLE` | Yes | Retry with `mode: "fast"` to force DuckDuckGo. |
-| `-32041` | `BUDGET_GUARD_ACTIVE` | No retry needed | The request already succeeded. Handle as a warning. |
-| `-32050` | `QUERY_TOO_LONG` | After fix | Shorten the query, then retry. |
-| `-32060` | `TEXT_TOO_LONG` | After fix | Split the text, then retry each chunk. |
-| `-32061` | `INVALID_VOICE_ID` | After fix | Correct the voice ID, then retry. |
-| `-32062` | `SYNTHESIS_FAILED` | Yes (transient) | Exponential backoff. |
-| `-32063` | `STREAM_UNSUPPORTED` | After fix | Set `stream: false`, then retry. |
-| `-32070` | `FILE_NOT_FOUND` | After fix | Re-upload the file, then retry. |
-| `-32071` | `UPLOAD_EXPIRED` | After fix | Re-upload, then retry immediately. |
-| `-32072` | `FILE_TOO_LARGE` | After fix | Split the file, then retry. |
-| `-32073` | `UNSUPPORTED_FILE_TYPE` | After fix | Convert the file format, then retry. |
-| `-32074` | `GEMINI_QUOTA_REACHED` | After reset | Wait for midnight PST. Use `model: "flash"` to avoid Pro quota. |
-| `-32075` | `ANALYSIS_FAILED` | Yes (transient) | Exponential backoff. Narrow the query. |
+| `-32001` | `PERMISSION_ERROR` | No | Fix the key permissions before retrying. |
+| `-32002` | `RATE_LIMIT_ERROR` | After reset | Wait for the reset time stated in the error. Do not retry before then. |
+| `SEARCH_UNAVAILABLE` | Search temporarily unavailable | Yes (transient) | Retry in a few seconds. |
+| `RATE_LIMITED` | Per-minute or daily search budget exceeded | After reset | Wait for the reset time stated in the error. Reduce request frequency. |
+| `QUOTA_EXCEEDED` | Capability quota exhausted | After 00:00 UTC | Do not retry until the daily quota resets. |
+| `TTS_UNAVAILABLE` | Speech synthesis temporarily unavailable | Yes (transient) | Retry in a few seconds. |
+| `ANALYZE_UNAVAILABLE` | File analysis temporarily unavailable | Yes (transient) | Retry in a few seconds. |
+| `MEMORY_UNAVAILABLE` | Memory service temporarily unavailable | Yes (transient) | Retry in a few seconds. |
+| `INVALID_PARAMS` | Invalid request parameters | After fix | Check the tool schema and retry. |
+| `INTERNAL_ERROR` | Internal error | Yes (transient) | Retry. If persistent, contact support. |
+| `UPLOAD_EXPIRED` | Upload has expired (24h window) | After fix | Re-upload, then retry immediately. |
 | `-32080` | `NAMESPACE_NOT_FOUND` | After fix | Write to the namespace first. |
 | `-32081` | `EMBEDDING_FAILED` | Yes (transient) | Exponential backoff. |
 | `-32082` | `MEMORY_LIMIT_REACHED` | After 5 min | Wait for auto-summarization to complete. |
@@ -1369,15 +1370,15 @@ An agent key may be compromised if it appears in a public repository, is include
 
 ---
 
-## Tavily credits exhausted mid-month
+## Search budget exhausted mid-month
 
-Tavily provides 1,000 credits/month on the free tier. The budget guard switches IntelliSearch to DuckDuckGo at 800 credits, but if Tavily credits reach 1,000 before the month resets, `mode: "auto"` and `mode: "research"` will route exclusively through DuckDuckGo for the remainder of the month.
+The free-tier search budget is consumed at the calendar-month rate. The platform's budget guard proactively routes high-cost requests to the free-tier path before the hard limit is reached.
 
-**Impact:** DuckDuckGo does not support `dork` parameters. Dorking calls sent with `mode: "research"` after Tavily credits are exhausted will receive results without the dork operators applied.
+**Impact:** When the search budget is exhausted, `mode: "auto"` and `mode: "research"` route exclusively to the free-tier path for the remainder of the month. The free-tier path does not support all `dork` operators; dorking calls will receive results without the dork operators applied.
 
 **Recovery steps:**
-1. Switch to `mode: "fast"` explicitly to acknowledge DuckDuckGo routing.
-2. Monitor the Tavily credits counter in the IntelliSearch block on the dashboard.
+1. Switch to `mode: "fast"` explicitly to acknowledge the free-tier routing.
+2. Monitor the search budget counter in the IntelliSearch block on the dashboard.
 3. Credits reset on the calendar month boundary (not a rolling 30 days).
 
 ---

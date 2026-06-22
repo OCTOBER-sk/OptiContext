@@ -816,7 +816,7 @@ export default function Troubleshooting() {
               Use <CodeCell>POST /upload</CodeCell> with <CodeCell>Content-Type: multipart/form-data</CodeCell> for files over 100MB.
               Do not base64-encode large files and embed them in <CodeCell>file_b64</CodeCell> — this inflates the size by ~33% and will exceed the inline limit.
               <div style={{ marginTop: 8, marginBottom: 8 }}>
-                <CodeBlock code={`curl -X POST https://mcp.opticontext.dev/upload \\
+                <CodeBlock code={`curl -X POST https://opticontext.opticontext.workers.dev/upload \\
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \\
   -F "file=@/path/to/large_report.pdf"`} label="bash" />
               </div>
@@ -959,7 +959,7 @@ export default function Troubleshooting() {
           <strong>Diagnostic steps:</strong>
         </p>
         <ol style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 24, paddingLeft: 20 }}>
-          <li>Verify the endpoint URL is exactly <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>https://mcp.opticontext.dev/mcp</code> — no trailing slash, no path variation.</li>
+          <li>Verify the endpoint URL is exactly <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>https://opticontext.opticontext.workers.dev/mcp</code> — no trailing slash, no path variation.</li>
           <li>Check the transport is set to <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>streamable-http</code>. HTTP+SSE runtimes should use the <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem' }}>/sse</code> endpoint instead.</li>
           <li>Confirm the <CodeCell>Authorization</CodeCell> header is present in the runtime config.</li>
         </ol>
@@ -1000,8 +1000,8 @@ export default function Troubleshooting() {
         <DataTable
           headers={['Transport', 'Endpoint', 'MCP spec version']}
           rows={[
-            ['Streamable HTTP (current)', <CodeCell color="var(--code-text)">POST https://mcp.opticontext.dev/mcp</CodeCell>, 'MCP 2025-11-25'],
-            ['HTTP+SSE (legacy)', <CodeCell color="var(--code-text)">GET https://mcp.opticontext.dev/sse</CodeCell>, 'MCP 2025-03-26'],
+            ['Streamable HTTP (current)', <CodeCell color="var(--code-text)">POST https://opticontext.opticontext.workers.dev/mcp</CodeCell>, 'MCP 2025-11-25'],
+            ['HTTP+SSE (legacy)', <CodeCell color="var(--code-text)">GET https://opticontext.opticontext.workers.dev/sse</CodeCell>, 'MCP 2025-03-26'],
           ]}
         />
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
@@ -1082,7 +1082,7 @@ export default function Troubleshooting() {
           Before diagnosing request failures, verify the OptiContext edge server is reachable:
         </p>
         <div style={{ marginBottom: 12 }}>
-          <CodeBlock code="curl https://mcp.opticontext.dev/health" label="bash" />
+          <CodeBlock code="curl https://opticontext.opticontext.workers.dev/health" label="bash" />
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
           Expected response:
@@ -1095,7 +1095,7 @@ export default function Troubleshooting() {
 }`} label="/health response" />
         </div>
         <p style={{ fontFamily: "'Switzer', Inter, system-ui, sans-serif", fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-          <CodeCell>/health</CodeCell> requires no authentication. If this request fails, the failure is at the network or edge layer — not at the capability or auth layer. Check for DNS resolution failures, firewall rules blocking <CodeCell>mcp.opticontext.dev</CodeCell>, or local network restrictions.
+          <CodeCell>/health</CodeCell> requires no authentication. If this request fails, the failure is at the network or edge layer — not at the capability or auth layer. Check for DNS resolution failures, firewall rules blocking <CodeCell>opticontext.opticontext.workers.dev</CodeCell>, or local network restrictions.
         </p>
 
         <SubHeading>INTERNAL_ERROR — -32603</SubHeading>

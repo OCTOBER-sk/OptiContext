@@ -69,7 +69,7 @@ function useCopy() {
 const CONFIG_JSON = JSON.stringify({
   mcpServers: {
     opticontext: {
-      url: 'https://mcp.opticontext.dev/mcp',
+      url: 'https://opticontext.opticontext.workers.dev/mcp',
       transport: 'streamable-http',
       headers: { Authorization: 'Bearer YOUR_AGENT_KEY' },
     },
@@ -354,7 +354,7 @@ export default function DocsHome() {
             OptiContext is an MCP server deployed on a global edge network.
             It implements Streamable HTTP transport as defined in the Model Context Protocol specification
             and exposes four capabilities — IntelliSearch, VoiceBridge, DeepDoc, and MemoryCore —
-            through a single endpoint at https://mcp.opticontext.dev/mcp.
+            through a single endpoint at https://opticontext.opticontext.workers.dev/mcp.
           </p>
 
           <p style={{ margin: 0 }}>
@@ -417,7 +417,7 @@ export default function DocsHome() {
                 <span style={{ color: 'var(--code-muted)' }}>{'    "opticontext": {'}</span>{'\n'}
                 <span style={{ color: 'var(--code-accent)' }}>{'      "url"'}</span>
                 <span style={{ color: 'var(--code-text)' }}>{': '}</span>
-                <span style={{ color: 'var(--code-string)' }}>{'"https://mcp.opticontext.dev/mcp"'}</span>
+                <span style={{ color: 'var(--code-string)' }}>{'"https://opticontext.opticontext.workers.dev/mcp"'}</span>
                 <span style={{ color: 'var(--code-text)' }}>{','}</span>{'\n'}
                 <span style={{ color: 'var(--code-accent)' }}>{'      "transport"'}</span>
                 <span style={{ color: 'var(--code-text)' }}>{': '}</span>

@@ -181,28 +181,30 @@ All tools follow JSON-RPC 2.0:
 
 ### `opticontext_search`
 
-Web search with AI dorking and Cerebras summarization.
+Web search with AI-powered summarization and dork operators. See the
+`opticontext_guide` tool (`topic: "search"`) for current operational
+guidance.
 
 | Argument | Type | Default | Description |
 |---|---|---|---|
 | `query` | string | **required** | Natural language search query |
 | `mode` | string | `"auto"` | `auto`, `research`, `fast`, `scrape` |
 | `dork` | object | `{}` | `site_filter`, `file_type`, `date_after`, `exclude_terms` |
-| `max_results` | integer | `5` | Max results (up to 20) |
-| `summarize` | boolean | `true` | Run Cerebras AI summarization |
+| `max_results` | integer | `5` | Max results (up to 50) |
+| `summarize` | boolean | `true` | Apply AI summarization to raw results |
 
 ---
 
 ### `opticontext_tts`
 
-Convert text to natural speech via Unreal Speech.
+Convert text to natural speech.
 
 | Argument | Type | Default | Description |
 |---|---|---|---|
-| `text` | string | **required** | Text to synthesize (max 3,000 chars) |
-| `voice` | string | `"Scarlett"` | Voice ID: Scarlett, Dan, Will, Liv, Priya |
-| `speed` | number | `1.0` | Speed multiplier (0.5–2.0) |
-| `format` | string | `"mp3"` | `mp3`, `ogg`, `wav` |
+| `text` | string | **required** | Text to synthesize (max 30,000 chars) |
+| `voice` | string | `"Scarlett"` | Voice ID — see `opticontext_guide` for the full list |
+| `speed` | number | `1.0` | Speed multiplier (0.25–4.0) |
+| `format` | string | `"mp3"` | `mp3`, `ogg`, `wav`, `aac`, `flac` |
 | `platform` | string | `"raw"` | `telegram`, `discord`, `whatsapp`, `raw` |
 | `stream` | boolean | `false` | Return base64 chunks vs URL |
 
@@ -210,9 +212,9 @@ Convert text to natural speech via Unreal Speech.
 
 ### `opticontext_analyze`
 
-Deep file analysis using Gemini.
+Deep file analysis (PDF, images, code, audio, video, documents).
 
-One of `file_url`, `file_b64`, or `upload_id` is required.
+One of `file_url`, `file_b64`, `upload_id`, or `file_id` is required.
 
 | Argument | Type | Default | Description |
 |---|---|---|---|
@@ -250,17 +252,37 @@ Semantic search over stored memories.
 | `namespace` | string | `"general"` | Namespace to search |
 | `top_k` | integer | `5` | Max results |
 | `min_similarity` | number | `0.7` | Min cosine similarity (0-1) |
-| `rerank` | boolean | `true` | Apply Cerebras reranking |
+| `rerank` | boolean | `false` | Apply AI reranking to results |
 
 ---
 
 ## Error Codes
 
+Tool-level errors are returned as a structured JSON object in the response
+`content` (with `isError: true`). The `error` field is a stable,
+platform-level code; the `message` is a sanitized, user-facing description;
+the `retry_hint` (when present) is a short suggested next step.
+
+| Code | Meaning |
+|---|---|
+| `SEARCH_UNAVAILABLE` | Web search temporarily unavailable. Retry. |
+| `SEARCH_QUALITY_INSUFFICIENT` | Search returned no reliable sources. Retry with `mode: "research"` or refine the query. |
+| `RATE_LIMITED` | Search is rate-limited. Wait and retry. |
+| `QUOTA_EXCEEDED` | Daily quota for the capability exhausted. Resets at 00:00 UTC. |
+| `TTS_UNAVAILABLE` | Speech synthesis temporarily unavailable. Retry. |
+| `ANALYZE_UNAVAILABLE` | File analysis temporarily unavailable. Retry. |
+| `MEMORY_UNAVAILABLE` | Memory service temporarily unavailable. Retry. |
+| `INVALID_PARAMS` | Request parameters invalid. Check the tool schema. |
+| `INTERNAL_ERROR` | Unexpected server error. Retry, contact support if persistent. |
+
+JSON-RPC transport-level errors use the standard JSON-RPC 2.0 codes:
+
 | Code | HTTP | Meaning |
 |---|---|---|
-| `AUTH_ERROR` | 401 | Missing/invalid API key |
-| `RATE_LIMIT_ERROR` | 429 | Rate limit exceeded |
-| `PERMISSION_ERROR` | 403 | Tool not allowed for agent |
-| `VALIDATION_ERROR` | 400 | Invalid input |
-| `PROVIDER_ERROR` | 502 | Upstream provider failed |
-| `INTERNAL_ERROR` | 500 | Unexpected server error |
+| `-32700` | 400 | Parse error |
+| `-32600` | 400 | Invalid Request |
+| `-32601` | 404 | Method not found |
+| `-32602` | 400 | Invalid params |
+| `-32603` | 500 | Internal error |
+| `-32001` | 401/403 | Auth or permission error |
+| `-32002` | 429 | Tool execution timed out or rate-limited |

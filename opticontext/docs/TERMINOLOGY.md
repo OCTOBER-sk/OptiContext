@@ -386,28 +386,28 @@ No exceptions.
 
 **Base URL (production):**
 ```
-https://mcp.opticontext.dev/mcp
+https://opticontext.opticontext.workers.dev/mcp
 ```
 
 **Upload endpoint:**
 ```
-https://mcp.opticontext.dev/upload
+https://opticontext.opticontext.workers.dev/upload
 ```
 
 **Health endpoint:**
 ```
-https://mcp.opticontext.dev/health
+https://opticontext.opticontext.workers.dev/health
 ```
 
 **Usage endpoint:**
 ```
-https://mcp.opticontext.dev/usage
+https://opticontext.opticontext.workers.dev/usage
 ```
 
 **Rules:**
 - Always include the full URL in examples. Never use relative paths like `/mcp` alone in copy-ready snippets.
 - Never use placeholder domains like `yourworker.workers.dev` in public-facing content.
-- The subdomain is `mcp.opticontext.dev` — not `api.`, not `opticontext.`, not the raw worker URL.
+- The subdomain is `opticontext.opticontext.workers.dev` — not `api.`, not `opticontext.`, not the raw worker URL.
 
 ---
 
@@ -638,7 +638,7 @@ Always use: `sess_4c8d2f1a9b3e`
 All curl examples follow this pattern:
 
 ```bash
-curl -X POST https://mcp.opticontext.dev/mcp \
+curl -X POST https://opticontext.opticontext.workers.dev/mcp \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer opctx_myagent_a3f8d9e1b2c4f6a8d0e2b4c6f8a0d2e4" \
   -d '{

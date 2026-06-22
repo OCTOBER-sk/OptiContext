@@ -130,25 +130,41 @@ export async function handleSearch(
         provider: aiResult.provider_used,
       });
 
-      // Phantom-answer suppression: when the AI returns zero sources AND
-      // low confidence, replace the synthesized answer with a structured
-      // warning that asks the caller to retry with research mode.
+      // Phantom-answer suppression. Three checks, in order of severity:
+      //   1. detectLowConfidence — empty sources AND low model confidence
+      //   2. detectUngroundedFacts — at least one fact with no supporting source
+      //   3. detectOverconfidentSummary — high confidence but no sources
       const lowConfidence = detectLowConfidence(finalResponse);
-      if (lowConfidence.isLowConfidence) {
+      const ungrounded = detectUngroundedFacts(finalResponse, results);
+      const overconfident = detectOverconfidentSummary(finalResponse);
+
+      if (lowConfidence.isLowConfidence || ungrounded.isUngrounded || overconfident.isOverconfident) {
         logger.warn("Phantom-answer suppressed", {
           agent_id: auth.agent_id,
           mode,
           provider_used: providerUsed,
           confidence: lowConfidence.confidence,
           sources_count: lowConfidence.sourcesCount,
+          ungrounded_facts: ungrounded.ungroundedCount,
+          total_facts: ungrounded.totalFacts,
+          overconfident: overconfident.isOverconfident,
         });
         finalResponse = JSON.stringify({
           summary: null,
-          low_confidence_warning:
-            "No reliable sources found. Retry using research mode.",
+          low_confidence_warning: (() => {
+            if (ungrounded.isUngrounded) {
+              return `Detected ${ungrounded.ungroundedCount} ungrounded fact(s) — at least one claim in the summary is not supported by the search results. Retry with research mode or a more specific query.`;
+            }
+            if (overconfident.isOverconfident) {
+              return "Model expressed high confidence but provided no sources. Retry with research mode.";
+            }
+            return "No reliable sources found. Retry using research mode.";
+          })(),
           requires_research_mode: true,
           confidence: lowConfidence.confidence,
           sources_count: lowConfidence.sourcesCount,
+          ungrounded_facts: ungrounded.ungroundedCount,
+          total_facts: ungrounded.totalFacts,
         });
       }
     }
@@ -237,6 +253,101 @@ export function detectLowConfidence(
 
   const isLowConfidence = sources.length === 0 && confidence < 0.3;
   return { isLowConfidence, confidence, sourcesCount: sources.length };
+}
+
+/**
+ * Heuristic grounding check: for each `fact` in the AI response, verify
+ * that at least one of its `source` URLs is mentioned (or its domain
+ * appears) in the raw search results string. This catches the most
+ * common phantom pattern: the model cites a plausible URL that was
+ * NOT in the input context.
+ *
+ * Conservative on purpose — we only flag a fact as ungrounded when
+ * *no* part of its source URL is present in the input. A fact with
+ * no source at all is always considered ungrounded.
+ */
+export function detectUngroundedFacts(
+  aiResponse: string,
+  rawResults: string,
+): { isUngrounded: boolean; ungroundedCount: number; totalFacts: number } {
+  if (!aiResponse) return { isUngrounded: false, ungroundedCount: 0, totalFacts: 0 };
+  const stripped = aiResponse
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+  let parsed: { facts?: unknown } | null = null;
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    return { isUngrounded: false, ungroundedCount: 0, totalFacts: 0 };
+  }
+  if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.facts)) {
+    return { isUngrounded: false, ungroundedCount: 0, totalFacts: 0 };
+  }
+  const facts = parsed.facts as Array<{ source?: unknown }>;
+  const lowerResults = (rawResults ?? "").toLowerCase();
+  let ungrounded = 0;
+  for (const f of facts) {
+    if (typeof f !== "object" || f === null) continue;
+    const source = (f as { source?: unknown }).source;
+    if (typeof source !== "string" || source.length === 0) {
+      ungrounded++;
+      continue;
+    }
+    // Accept either the full URL or the hostname being present in the raw results.
+    const lowerSource = source.toLowerCase();
+    let host = lowerSource;
+    try {
+      host = new URL(source).hostname.toLowerCase();
+    } catch {
+      // not a URL — fall through to substring match
+    }
+    if (!lowerResults.includes(lowerSource) && !lowerResults.includes(host)) {
+      ungrounded++;
+    }
+  }
+  return {
+    isUngrounded: ungrounded > 0,
+    ungroundedCount: ungrounded,
+    totalFacts: facts.length,
+  };
+}
+
+/**
+ * Detect "confident synthesis with no source citations" — a model
+ * that returns a high `confidence` but an empty `sources` array.
+ * The original `detectLowConfidence` only catches this when
+ * confidence < 0.3; this catches the inverse pattern where the
+ * model is confidently wrong.
+ */
+export function detectOverconfidentSummary(
+  aiResponse: string,
+): { isOverconfident: boolean; confidence: number; sourcesCount: number } {
+  if (!aiResponse) return { isOverconfident: false, confidence: 1, sourcesCount: 0 };
+  const stripped = aiResponse
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+  let parsed: { sources?: unknown; confidence?: unknown } | null = null;
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    return { isOverconfident: false, confidence: 1, sourcesCount: 0 };
+  }
+  if (!parsed || typeof parsed !== "object") {
+    return { isOverconfident: false, confidence: 1, sourcesCount: 0 };
+  }
+  const sources = Array.isArray(parsed.sources) ? parsed.sources : [];
+  const confidence = typeof parsed.confidence === "number" ? parsed.confidence : 0;
+  const isOverconfident = sources.length === 0 && confidence >= 0.85;
+  return { isOverconfident, confidence, sourcesCount: sources.length };
+}
+
+/**
+ * Strips a code fence from a JSON response. Exposed for tests.
+ */
+export function stripCodeFence(s: string): string {
+  return s.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
 }
 
 function formatTavilyResults(

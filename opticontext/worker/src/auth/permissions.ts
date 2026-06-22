@@ -6,6 +6,7 @@ const VALID_TOOLS = [
   "deepdoc",
   "memorycore",
   "guide",
+  "devsearch",
 ] as const;
 
 export type ToolName = (typeof VALID_TOOLS)[number];
@@ -17,6 +18,7 @@ const MCP_TOOL_TO_INTERNAL: Record<string, ToolName> = {
   opticontext_memory_write: "memorycore",
   opticontext_memory_search: "memorycore",
   opticontext_guide: "guide",
+  opticontext_dev_search: "devsearch",
 };
 
 export function resolveToolName(mcpToolName: string): ToolName | null {

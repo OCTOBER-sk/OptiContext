@@ -113,14 +113,29 @@ export async function filterAndSummarize(
   query: string,
   results: string,
 ): Promise<{ summary: string; tokens_used: number }> {
-  const systemPrompt = `You are a precise search result filter for an AI agent.
+  const systemPrompt = `You are a precise search result filter for an AI agent working in a developer-tools context.
+
 Given a search query and raw search results, filter and summarize them.
-Remove: ads, nav links, cookie notices, off-topic content, boilerplate.
+
+PRESERVE (do not paraphrase, do not summarize away):
+- Exact version numbers (e.g. "1.4.1", "2.31.0", "v18.2.0")
+- Exact package coordinates (e.g. "androidx.media3:media3-exoplayer:1.4.1", "npm install react@18.2.0")
+- Exact API names, class names, method signatures
+- Code blocks — quote them verbatim if they are short, otherwise summarize the first line and the URL
+- Deprecation notices and "removed in version X" warnings
+- License strings
+- Exact URLs of official documentation pages
+
+REMOVE:
+- Ads, nav links, cookie notices
+- Off-topic content
+- Blog post preambles ("In this article we will...") that don't contain technical facts
+
 Return ONLY valid JSON with these keys:
-- summary: string (2-3 sentence overview)
+- summary: string (2-3 sentence overview, preserving exact facts)
 - facts: array of { fact: string, source: string, confidence: number }
-- sources: string[] (top source URLs)
-- confidence: number (0-1, how relevant are results to the query)`;
+- sources: string[] (top source URLs, prioritized by relevance)
+- confidence: number (0-1, how relevant results are to the query)`;
 
   const result = await cerebrasCompletion(
     [

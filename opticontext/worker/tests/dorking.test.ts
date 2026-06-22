@@ -41,8 +41,18 @@ describe("dorking", () => {
   });
 
   describe("buildDorkForIntent", () => {
-    it("adds github site filter for code intents", () => {
-      expect(buildDorkForIntent("find code example")).toContain("site:github.com");
+    it("scopes code-example queries to forums (GitHub + Stack Overflow)", () => {
+      // "find code example" should NOT be scoped to github.com only
+      // (the old behavior). It should hit a technical-source mix so the
+      // agent gets both source and discussion.
+      const r = buildDorkForIntent("find code example");
+      expect(r).toMatch(/site:(github\.com|stackoverflow\.com)/);
+      expect(r).toContain("code example");
+    });
+
+    it("scopes GitHub-only when user explicitly asks for source/repo", () => {
+      const r = buildDorkForIntent("find the github repo for kotlinx coroutines");
+      expect(r).toContain("site:github.com");
     });
 
     it("adds nvd/cve site filter for security intents", () => {
@@ -58,6 +68,21 @@ describe("dorking", () => {
     it("adds pdf filetype for document intents", () => {
       const r = buildDorkForIntent("financial report pdf");
       expect(r).toContain("filetype:pdf");
+    });
+
+    it("scopes Android queries to developer.android.com and kotlinlang.org", () => {
+      const r = buildDorkForIntent("how to use Flow in coroutines");
+      expect(r).toMatch(/site:(kotlinlang\.org|developer\.android\.com)/);
+    });
+
+    it("scopes React queries to react.dev", () => {
+      const r = buildDorkForIntent("useState example react");
+      expect(r).toContain("site:react.dev");
+    });
+
+    it("scopes package version queries to registries", () => {
+      const r = buildDorkForIntent("what is the latest version of react");
+      expect(r).toMatch(/site:(npmjs\.com|react\.dev)/);
     });
 
     it("returns original intent if no pattern matches", () => {

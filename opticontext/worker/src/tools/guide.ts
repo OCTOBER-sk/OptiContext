@@ -8,6 +8,7 @@ const ROUTING = `
 
 ## Capability Selection
 - **web search / current info / news / facts** → \`opticontext_search\`
+- **developer queries: Maven coords, npm/pip/cargo/pub/nuget, Android/Kotlin/React/Python/Rust/Go/Swift/.NET frameworks, API references, code examples, compatibility checks** → \`opticontext_dev_search\`
 - **uploaded files / images / PDFs / documents** → \`opticontext_analyze\`
 - **cross-session memory / remember / recall** → \`opticontext_memory_write\` / \`opticontext_memory_search\`
 - **text-to-speech / audio generation** → \`opticontext_tts\``;
@@ -52,6 +53,22 @@ const ANALYZE = `
 **MIME validation:** MIME type must match supported formats. Extension-MIME mismatch logs a warning but doesn't block.
 **Max inline:** 100MB (\`file_b64\`). Max upload: 25 MB (\`/upload\` endpoint). Analysis model: Gemini with auto-routing.`;
 
+const DEV_SEARCH = `
+
+## opticontext_dev_search — Developer-Aware Search
+**When:** developer queries — Maven coordinates, package versions, framework docs (Android, Kotlin, React, MDN, Rust, Go, Python, Swift, .NET, etc.), API references, code examples, compatibility checks, issue diagnosis.
+**Why use this instead of opticontext_search:** routes to structured package registries (Maven Central, Google Maven, npm, NuGet, PyPI, crates.io, pub.dev) for canonical package metadata; boosts official documentation domains (developer.android.com, kotlinlang.org, react.dev, MDN, etc.) above SEO blogs; preserves exact versions and coordinates; can be biased by the user's project context.
+**Two actions:**
+- \`action: "search"\` — run a dev query. Required: \`query\`.
+- \`action: "set_context"\` — store parsed project manifests. Required: \`context\` (one or more of: \`libsVersionsToml\`, \`buildGradleKts\`, \`buildGradle\`, \`packageJson\`, \`cargoToml\`, \`requirementsTxt\`, \`pyprojectToml\`). The agent runtime reads these files; OptiContext does not access the filesystem.
+**Project bias:** call \`set_context\` once at session start with a \`project_id\`, then pass the same \`project_id\` on every search. Results matching the project's stack (dependency names, versions) are ranked higher. Memory suggestions are emitted to remind you to persist important context.
+**Decision tree:**
+- Query has \`groupId:artifactId\` → dev_search with \`action: "search"\`. Returns structured package metadata, not a web summary.
+- Query mentions a framework + "how to" / "example" → dev_search. Routes to framework docs domain.
+- Query is "is X compatible with Y" → dev_search. Returns compatibility evidence.
+- Query is a current event / news / general fact → opticontext_search (dev_search adds no value here).
+- Always prefer dev_search for any package version, dependency, or framework question.`;
+
 const MEMORY = `
 
 ## opticontext_memory_write / _search — Persistent Memory
@@ -68,6 +85,9 @@ const EFFICIENCY = `
 
 ## Efficiency Rules
 - Always check memory FIRST for prior context before searching or analyzing.
+- For developer queries (Maven coords, packages, framework docs, API refs, compatibility), use \`opticontext_dev_search\` instead of \`opticontext_search\`. It routes to package registries, boosts official docs, and preserves exact versions.
+- For general web search, news, current events, and non-developer queries, use \`opticontext_search\`.
+- When using dev_search with project context, call \`action: "set_context"\` once at session start, then pass \`project_id\` on every subsequent search to bias results.
 - Keep \`summarize: true\` for search — AI filters noise from raw results.
 - Use precise queries: "React 19 Server Components performance benchmarks" beats "new React features".
 - Search results cached 15 min, TTS audio cached 24 hrs. Don't repeat identical calls.
@@ -134,13 +154,13 @@ export async function handleGuide(
 
   const topicSections: Record<string, string> = {
     all: GUIDE,
-    search: SECTION_HEADER + ROUTING + SEARCH,
+    search: SECTION_HEADER + ROUTING + SEARCH + DEV_SEARCH,
     tts: SECTION_HEADER + TTS,
     analyze: SECTION_HEADER + ANALYZE,
     memory: SECTION_HEADER + MEMORY,
     limits: SECTION_HEADER + CONSTRAINTS,
     errors: SECTION_HEADER + CONSTRAINTS,
-    "best-practices": SECTION_HEADER + ROUTING + EFFICIENCY,
+    "best-practices": SECTION_HEADER + ROUTING + EFFICIENCY + DEV_SEARCH,
   };
 
   const content = topicSections[topic] || topicSections.all;

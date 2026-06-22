@@ -61,21 +61,98 @@ export function buildDorkQuery(
   return parts.join(" ");
 }
 
+/**
+ * Tier-1 official-doc sites, used by the broad "developer question"
+ * intent pattern. The full tier list lives in `domain-priority.ts`;
+ * this is the subset that maps well to dork operators.
+ */
+const DEV_DOC_SITES: Array<[RegExp, string[]]> = [
+  // Android / Kotlin
+  [/android|kotlin|jetpack|media3|exoplayer|hilt|retrofit|okhttp|coroutines|compose/i, [
+    "developer.android.com",
+    "kotlinlang.org",
+  ]],
+  // Web frontend
+  [/react|next\.?js|vue|angular|svelte|tailwind|webpack|vite/i, [
+    "react.dev",
+    "vuejs.org",
+    "angular.io",
+    "svelte.dev",
+    "developer.mozilla.org",
+  ]],
+  // Python
+  [/django|flask|fastapi|pip|pypi|poetry|conda|numpy|pandas|pytest/i, [
+    "docs.python.org",
+    "pypi.org",
+  ]],
+  // Java/JVM
+  [/spring\s*boot|spring|hibernate|maven|gradle|jvm/i, [
+    "docs.spring.io",
+    "spring.io",
+    "docs.gradle.org",
+  ]],
+  // JS/TS runtime
+  [/node\.?js|deno|bun|npm|express|fastify/i, [
+    "nodejs.org",
+    "npmjs.com",
+  ]],
+  // Go
+  [/golang|\bgo\s+module|gin|echo\s+framework/i, [
+    "go.dev",
+    "pkg.go.dev",
+  ]],
+  // Rust
+  [/rust|cargo|actix|axum|rocket|wasm/i, [
+    "rust-lang.org",
+    "docs.rs",
+  ]],
+  // Swift / iOS
+  [/swift|swiftui|uikit|ios|apple/i, [
+    "docs.swift.org",
+    "swift.org",
+    "developer.apple.com",
+  ]],
+  // .NET
+  [/\.net|dotnet|asp\.net|c#|csharp|nuget|f#/i, [
+    "learn.microsoft.com",
+    "docs.microsoft.com",
+    "nuget.org",
+  ]],
+  // Database
+  [/postgres|postgresql|sqlite|mysql|mongodb|redis|elasticsearch|sql|orm/i, [
+    "postgresql.org",
+    "sqlite.org",
+    "mongodb.com",
+    "redis.io",
+  ]],
+];
+
+const PACKAGE_INTENT = /\b(maven|gradle|nuget|cargo|pub|pypi|npm|package|version|dependency|coordinate|latest|current|newest|stable|release)\b/i;
+
+const FORUM_SITES = [
+  "stackoverflow.com",
+  "github.com",
+];
+
 export function buildDorkForIntent(intent: string): string {
   const intentLower = intent.toLowerCase();
 
-  if (intentLower.includes("github") || intentLower.includes("code")) {
+  // 1. CVE / security — highest priority, narrow domain
+  if (
+    /\b(cve-\d|vulnerability|exploit|advisory|security\s+advisory)\b/i.test(intent)
+  ) {
+    return `(site:nvd.nist.gov OR site:cve.mitre.org OR site:github.com/advisories) ${intent}`;
+  }
+
+  // 2. GitHub-only when the user explicitly asks for source/repo
+  if (
+    /\b(github|repo|repository|source\s+code)\b/i.test(intent) &&
+    !PACKAGE_INTENT.test(intent)
+  ) {
     return `site:github.com ${intent}`;
   }
 
-  if (
-    intentLower.includes("cve") ||
-    intentLower.includes("vulnerability") ||
-    intentLower.includes("security")
-  ) {
-    return `site:nvd.nist.gov OR site:cve.mitre.org ${intent}`;
-  }
-
+  // 3. Pricing / plans
   if (
     intentLower.includes("pricing") ||
     intentLower.includes("plans") ||
@@ -84,9 +161,43 @@ export function buildDorkForIntent(intent: string): string {
     return `${intent} inurl:pricing OR inurl:plans`;
   }
 
-  if (intentLower.includes("pdf") || intentLower.includes("document")) {
+  // 4. PDF / document
+  if (intentLower.includes("pdf") || /\b(whitepaper|white\s*paper|report)\b/i.test(intent)) {
     return `${intent} filetype:pdf`;
   }
 
+  // 5. Package manager / version / coordinate intent
+  if (PACKAGE_INTENT.test(intent)) {
+    const sites = pickSitesForQuery(intent);
+    if (sites.length > 0) {
+      return `(${sites.map((s) => `site:${s}`).join(" OR ")}) ${intent}`;
+    }
+  }
+
+  // 6. Framework / language docs (broader match)
+  const docSites = pickSitesForQuery(intent);
+  if (docSites.length > 0) {
+    return `(${docSites.map((s) => `site:${s}`).join(" OR ")}) ${intent}`;
+  }
+
+  // 7. Forum fallback for "error" / "how to" / "issue" / "code example" phrasing
+  if (
+    /\b(error|exception|stack\s*trace|fails?|broken|not\s+working|how\s+do\s+i|code\s+example|code\s+sample|snippet|example)\b/i.test(
+      intent,
+    )
+  ) {
+    return `(${FORUM_SITES.map((s) => `site:${s}`).join(" OR ")}) ${intent}`;
+  }
+
   return intent;
+}
+
+function pickSitesForQuery(q: string): string[] {
+  const out = new Set<string>();
+  for (const [pattern, sites] of DEV_DOC_SITES) {
+    if (pattern.test(q)) {
+      for (const s of sites) out.add(s);
+    }
+  }
+  return Array.from(out);
 }

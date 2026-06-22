@@ -242,6 +242,79 @@ export const TOOL_SCHEMAS = [
     },
   },
   {
+    name: "opticontext_dev_search",
+    description:
+      "Developer-aware search for code, packages, and official documentation. Use this tool for any query involving Maven coordinates, npm/pip/cargo/pub/nuget packages, Android/Kotlin/React/Python/Rust/Go/Swift/.NET frameworks, API references, code examples, or compatibility checks. Routes to structured package registries (Maven Central, Google Maven, npm, NuGet, PyPI, crates.io, pub.dev) for direct canonical lookups, and to official documentation domains (developer.android.com, kotlinlang.org, react.dev, MDN, docs.python.org, etc.) for framework questions. Accepts an optional `project_id` and `action: set_context` to bias results against the user's local project (build.gradle.kts, libs.versions.toml, package.json, Cargo.toml, requirements.txt, pyproject.toml). Returns structured `packages` data plus ranked `web` results, plus `memory_suggestions` for the agent to consider writing. General-purpose web search should still use `opticontext_search`. Call opticontext_guide with topic:'search' for guidance on when to use which tool.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["search", "set_context"],
+          default: "search",
+          description:
+            "search=run a dev query (default). set_context=store/refresh project context from manifests. With set_context, `context` is required and `query` is ignored.",
+        },
+        query: {
+          type: "string",
+          description:
+            "Natural-language developer query. Examples: 'androidx.media3:media3-exoplayer', 'latest version of numpy', 'how to use Flow.combine', 'is Concentus compatible with .NET 8', 'ExoPlayer HLS example'. Required for action=search.",
+        },
+        project_id: {
+          type: "string",
+          description:
+            "Stable identifier for the user's project. Set once via set_context, then pass on every subsequent search call to bias results. Recommended.",
+        },
+        max_results: {
+          type: "integer",
+          default: 5,
+          minimum: 1,
+          maximum: 20,
+          description:
+            "Max web results to return (1-20). Default 5. Package results are bounded by what registries return.",
+        },
+        timeout_ms: {
+          type: "integer",
+          default: 10000,
+          minimum: 500,
+          maximum: 30000,
+          description:
+            "Hard ceiling for the call in milliseconds. Default 10s.",
+        },
+        context: {
+          type: "object",
+          description:
+            "For action=set_context: parsed manifest text blobs. The agent runtime reads these from disk and passes the contents. OptiContext does not access the filesystem.",
+          properties: {
+            libsVersionsToml: { type: "string", description: "Contents of gradle/libs.versions.toml" },
+            buildGradleKts: { type: "string", description: "Contents of build.gradle.kts" },
+            buildGradle: { type: "string", description: "Contents of build.gradle" },
+            packageJson: { type: "string", description: "Contents of package.json" },
+            cargoToml: { type: "string", description: "Contents of Cargo.toml" },
+            requirementsTxt: { type: "string", description: "Contents of requirements.txt" },
+            pyprojectToml: { type: "string", description: "Contents of pyproject.toml" },
+            languages: { type: "array", items: { type: "string" }, description: "Languages used in the project, e.g. ['kotlin', 'java']" },
+            toolchain: {
+              type: "object",
+              description: "Toolchain versions",
+              properties: {
+                java: { type: "string" },
+                kotlin: { type: "string" },
+                gradle: { type: "string" },
+                node: { type: "string" },
+                rust: { type: "string" },
+                python: { type: "string" },
+                dart: { type: "string" },
+                go: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "opticontext_guide",
     description:
       "CALL THIS FIRST. Returns the OptiContext capabilities guide — a compact protocol reference covering tool selection heuristics, parameter cheat sheets, constraints, error codes, and efficiency rules. Call once on first connect to self-orient. Re-call whenever tool behavior is unclear, parameters fail, or you need to refresh operational knowledge. Topic-scoped: use 'search', 'tts', 'analyze', 'memory', 'limits', 'errors', or 'best-practices' for targeted retrieval. Use 'all' for the full guide.",

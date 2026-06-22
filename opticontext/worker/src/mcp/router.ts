@@ -5,6 +5,7 @@ import * as voicebridge from "../tools/voicebridge";
 import * as deepdoc from "../tools/deepdoc";
 import * as memorycore from "../tools/memorycore";
 import * as guide from "../tools/guide";
+import * as devsearch from "../tools/devsearch";
 
 export interface ToolCallResult {
   content: Array<{
@@ -43,6 +44,7 @@ const toolHandlers: Record<ToolName, ToolHandler> = {
   // memorycore needs the full MCP tool name to distinguish write vs search
   memorycore: (args, auth, toolName) => memorycore.handleMemory(args, auth, toolName),
   guide: (args, _auth, _toolName) => guide.handleGuide(args),
+  devsearch: (args, auth, _toolName) => devsearch.handleDevSearch(args, auth),
 };
 
 export function getToolHandler(mcpToolName: string): ToolHandler | null {

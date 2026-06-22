@@ -1,6 +1,7 @@
 import { setEnv, getEnv, Env } from "./context";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import { handleMCPRequest } from "./mcp/server";
+import { TOOL_SCHEMAS } from "./mcp/schemas";
 import { verifyApiKey, registerApiKey, extractBearerToken } from "./auth/verify";
 import { r2 } from "./storage/r2";
 import { kv } from "./storage/kv";
@@ -132,14 +133,7 @@ function handleHealth(): Response {
     version: SERVER_VERSION,
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.floor((Date.now() - WORKER_START_MS) / 1000),
-    tools: [
-      "opticontext_search",
-      "opticontext_tts",
-      "opticontext_analyze",
-      "opticontext_memory_write",
-      "opticontext_memory_search",
-      "opticontext_guide",
-    ],
+    tools: TOOL_SCHEMAS.map((s) => s.name),
   });
   return new Response(body, {
     status: 200,

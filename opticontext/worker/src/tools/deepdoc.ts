@@ -10,6 +10,7 @@ import { logger } from "../utils/logger";
 import cryptoUtils from "../utils/crypto";
 import { safeFetch, validateFetchUrl, sanitizeFilename, safeExtension, validateMimeType } from "../utils/safe-fetch";
 import { analyzeSchema, validateArgs } from "../mcp/validation";
+import { publicMetaForCapability, publicErrorMessage, isDebugMode } from "../utils/provider-abstraction";
 
 const MAX_INLINE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
 const PERSISTED_FILE_TTL_SEC = 30 * 24 * 60 * 60; // 30 days — matches KV expirationTtl for file_idx
@@ -160,14 +161,15 @@ export async function handleAnalyze(
         r2.delete("files", r2Key).catch(() => {});
         return {
           content: [{ type: "text", text: JSON.stringify({
-            error: "UPLOAD_EXPIRED — The upload_id has expired (24-hour window). Re-upload the file and retry immediately.",
+            error: "UPLOAD_EXPIRED",
+            message: "The upload has expired (24-hour window). Re-upload the file and retry immediately.",
             expires_at: expiresAtStr,
           }) }],
           isError: true,
           meta: {
             latency_ms: Date.now() - startTime,
             total_duration_ms: Date.now() - startTime,
-            provider_used: "gemini",
+            provider_used: isDebugMode(auth) ? "gemini" : publicMetaForCapability("analyze"),
             cache_hit: false,
             fallback_used: false,
             expires_at: expiresAtStr,
@@ -374,9 +376,10 @@ export async function handleAnalyze(
         latency_ms: Date.now() - startTime,
         total_duration_ms: Date.now() - startTime,
         tokens_used: analysis.tokens_used,
-        provider_used: selectedModel,
+        provider_used: isDebugMode(auth) ? selectedModel : publicMetaForCapability("analyze"),
         cache_hit: geminiUriCacheHit,
         fallback_used: false,
+        ...(isDebugMode(auth) ? { _debug: { internal_provider: selectedModel } } : {}),
         ...(returnedFileId ? { file_id: returnedFileId } : {}),
         ...(fileExpiresAt ? { expires_at: fileExpiresAt } : {}),
       },
@@ -387,13 +390,18 @@ export async function handleAnalyze(
       error: err instanceof Error ? err.message : "Unknown",
     });
 
+    const debug = isDebugMode(auth);
+    const publicErr = publicErrorMessage(err, { capability: "analyze", debug });
+
     return {
       content: [
         {
           type: "text",
           text: JSON.stringify({
-            error: "File analysis failed",
-            message: err instanceof Error ? err.message : "Unknown error",
+            error: publicErr.code,
+            message: publicErr.message,
+            ...(publicErr.retry_hint ? { retry_hint: publicErr.retry_hint } : {}),
+            ...(debug && err instanceof Error ? { _debug: { raw: err.message } } : {}),
           }),
         },
       ],
@@ -401,7 +409,8 @@ export async function handleAnalyze(
       meta: {
         latency_ms: Date.now() - startTime,
         total_duration_ms: Date.now() - startTime,
-        provider_used: "gemini",
+        provider_used: debug ? "gemini" : publicMetaForCapability("analyze"),
+        ...(debug ? { _debug: { internal_provider: "gemini" } } : {}),
         cache_hit: false,
         fallback_used: false,
         ...(fileExpiresAt ? { expires_at: fileExpiresAt } : {}),

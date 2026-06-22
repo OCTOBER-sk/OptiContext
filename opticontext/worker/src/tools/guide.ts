@@ -100,7 +100,7 @@ const CONSTRAINTS = `
 ## Operational Constraints
 **Rate limits (per agent key):**
 | Capability | Per minute | Per day |
-|-----------|-----------|---------|
+|-----------|-----------|--------|
 | All tools combined | 30 req/min | 500 req/day |
 
 **Body size limits:**
@@ -113,7 +113,9 @@ const CONSTRAINTS = `
 **SSRF protection:** \`file_url\` only accepts public HTTPS URLs. Private IPs, localhost, metadata endpoints (169.254.169.254), and non-HTTP(S) protocols are blocked. Single-hop redirects with target validation.
 **MIME validation:** uploaded/analyzed files must have a MIME type matching supported formats (PDF, images, audio, video, documents, code, archives). Rejected MIME types return a structured error.
 **Timeouts:** tool execution has a default timeout of 180 seconds. Configure via \`MCP_TOOL_TIMEOUT_MS\` env var or \`Mcp-Timeout\` request header (milliseconds). Timed-out calls return JSON-RPC error code -32002.
-**Budget guards:** Tavily (250 req/day). Apify ($4.50/month spend guard). Cerebras (1M tokens/day). Gemini Flash (1,500 req/day), Gemini Pro (50 req/day). Providers switch automatically before hard limits.
+**Budget guards:** platform-level budget guards. Search (250 req/day). File analysis (1,500 fast req/day + 50 pro req/day). Memory (5,000 embedding req/day). Speech synthesis ($5/mo spend guard). The platform switches to fallbacks or returns a generic error before hard limits. Implementation-provider details are not exposed in error messages.
+
+**Provider abstraction:** OptiContext is implemented on top of multiple upstream providers. End users and AI agents see platform-level categories (\`search\`, \`tts\`, \`analyze\`, \`memory\`, \`cache\`) in tool metadata, never internal provider names. Error messages are platform-level (\"Search is temporarily unavailable\", \"Speech synthesis quota exceeded for today\") and never name a specific upstream. Agents with admin or debug tier may see internal details via the \`_debug\` field of tool metadata. Contact your administrator to enable debug mode.
 
 Call \`tools/list\` for the complete machine-readable parameter schema for every tool.`;
 

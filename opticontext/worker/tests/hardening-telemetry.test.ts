@@ -155,9 +155,11 @@ describe("FIX 2 — Telemetry fields on tool responses", () => {
       vi.mocked(tavily.search).mockResolvedValue({ results: [], creditsUsed: 0, provider: "tavily" });
       vi.mocked(ddg.search).mockResolvedValue({ results: [{ title: "x", url: "https://x", snippet: "y" }], provider: "ddg" });
 
+      // Admin tier sees internal provider info; standard tier would see "search".
+      const adminAuth = { ...mockAuth, tier: "admin" };
       const r = await handleSearch(
         { query: "test", mode: "auto", summarize: false },
-        mockAuth,
+        adminAuth,
       );
       expect(r.meta?.fallback_used).toBe(true);
       expect(r.meta?.provider_used).toBe("ddg");
@@ -231,28 +233,33 @@ describe("FIX 2 — Telemetry fields on tool responses", () => {
 
   describe("memory_write tool", () => {
     it("returns all 5 required meta fields", async () => {
+      const adminAuth = { ...mockAuth, tier: "admin" };
       const r = await handleMemory(
         { content: "test memory", namespace: "qa", importance: 5 },
-        mockAuth,
+        adminAuth,
         "opticontext_memory_write",
       );
       for (const f of REQUIRED_META) {
         expect(r.meta).toHaveProperty(f);
       }
+      // Admin tier sees the internal provider name.
       expect(r.meta?.provider_used).toBe("gemini");
     });
   });
 
   describe("memory_search tool", () => {
     it("returns all 5 required meta fields", async () => {
+      const adminAuth = { ...mockAuth, tier: "admin" };
       const r = await handleMemory(
         { query: "test", namespace: "qa" },
-        mockAuth,
+        adminAuth,
         "opticontext_memory_search",
       );
       for (const f of REQUIRED_META) {
         expect(r.meta).toHaveProperty(f);
       }
+      // Admin tier sees the internal provider name.
+      // (For standard tier, publicMetaProvider("memory") is "memory" — the public category.)
       expect(r.meta?.provider_used).toBe("gemini");
     });
   });

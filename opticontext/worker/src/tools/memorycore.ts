@@ -5,6 +5,7 @@ import { embedText } from "../ai/gemini";
 import { supabase } from "../storage/supabase";
 import { logger } from "../utils/logger";
 import { memoryWriteSchema, memorySearchSchema, validateArgs } from "../mcp/validation";
+import { publicMetaForCapability, publicErrorMessage, isDebugMode } from "../utils/provider-abstraction";
 
 const CHUNK_SIZE = 2048;        // ~512 tokens (at ~4 chars/token) per plan spec
 const CHUNK_OVERLAP = 200;      // ~50 token overlap between chunks
@@ -58,13 +59,18 @@ export async function handleMemory(
       error: err instanceof Error ? err.message : "Unknown",
     });
 
+    const debug = isDebugMode(auth);
+    const publicErr = publicErrorMessage(err, { capability: "memory", debug });
+
     return {
       content: [
         {
           type: "text",
           text: JSON.stringify({
-            error: "Memory operation failed",
-            message: err instanceof Error ? err.message : "Unknown error",
+            error: publicErr.code,
+            message: publicErr.message,
+            ...(publicErr.retry_hint ? { retry_hint: publicErr.retry_hint } : {}),
+            ...(debug && err instanceof Error ? { _debug: { raw: err.message } } : {}),
           }),
         },
       ],
@@ -72,9 +78,10 @@ export async function handleMemory(
       meta: {
         latency_ms: Date.now() - startTime,
         total_duration_ms: Date.now() - startTime,
-        provider_used: "gemini",
+        provider_used: debug ? "gemini" : publicMetaForCapability("memory"),
         cache_hit: false,
         fallback_used: false,
+        ...(debug ? { _debug: { internal_provider: "gemini" } } : {}),
       },
     };
   }
@@ -210,9 +217,10 @@ async function handleWrite(
       latency_ms: Date.now() - startTime,
       total_duration_ms: Date.now() - startTime,
       tokens_used: tokensUsed,
-      provider_used: "gemini",
+      provider_used: isDebugMode(auth) ? "gemini" : publicMetaForCapability("memory"),
       cache_hit: false,
       fallback_used: false,
+      ...(isDebugMode(auth) ? { _debug: { internal_provider: "gemini" } } : {}),
     },
   };
 }
@@ -282,9 +290,14 @@ async function handleSearch(
     meta: {
       latency_ms: Date.now() - startTime,
       total_duration_ms: Date.now() - startTime,
-      provider_used: shouldRerank ? `${"gemini"}+${"cerebras"}` : "gemini",
+      // For memory_search the public category is "memory" (the public-side tool label).
+      // In debug mode, expose the internal provider name for admin diagnostics.
+      provider_used: isDebugMode(auth)
+        ? (shouldRerank ? "gemini+cerebras" : "gemini")
+        : publicMetaForCapability("memory"),
       cache_hit: false,
       fallback_used: false,
+      ...(isDebugMode(auth) ? { _debug: { internal_provider: shouldRerank ? "gemini+cerebras" : "gemini" } } : {}),
     },
   };
 }

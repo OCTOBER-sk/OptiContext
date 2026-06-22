@@ -26,6 +26,7 @@ import {
 import { kv } from "../storage/kv";
 import crypto from "../utils/crypto";
 import { logger } from "../utils/logger";
+import { publicMetaForCapability, publicErrorMessage, isDebugMode } from "../utils/provider-abstraction";
 
 export const devSearchSchema = z.object({
   action: z.enum(["search", "set_context"]).default("search"),
@@ -122,18 +123,23 @@ async function handleSearch(
       maxResults: args.max_results,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown";
     logger.error("DevSearch failed", {
       agent_id: auth.agent_id,
-      error: message,
+      error: err instanceof Error ? err.message : "Unknown",
     });
+
+    const debug = isDebugMode(auth);
+    const publicErr = publicErrorMessage(err, { capability: "search", debug });
+
     return {
       content: [
         {
           type: "text",
           text: JSON.stringify({
-            error: "DevSearch failed",
-            message,
+            error: publicErr.code,
+            message: publicErr.message,
+            ...(publicErr.retry_hint ? { retry_hint: publicErr.retry_hint } : {}),
+            ...(debug && err instanceof Error ? { _debug: { raw: err.message } } : {}),
           }),
         },
       ],
@@ -141,9 +147,10 @@ async function handleSearch(
       meta: {
         latency_ms: Date.now() - start,
         total_duration_ms: Date.now() - start,
-        provider_used: "dev-search",
+        provider_used: publicMetaForCapability("search"),
         cache_hit: false,
         fallback_used: false,
+        ...(debug ? { _debug: { internal_provider: "registry_or_search" } } : {}),
       },
     };
   }
@@ -151,14 +158,20 @@ async function handleSearch(
   const text = JSON.stringify(response, null, 2);
   await kv.put("CACHE", cacheKey, text, { expirationTtl: 900 });
 
+  const internalSource = response.packages.length > 0
+    ? "registry"
+    : (response.web[0]?.source ?? "search");
+  const debug = isDebugMode(auth);
+
   return {
     content: [{ type: "text", text }],
     meta: {
       latency_ms: Date.now() - start,
       total_duration_ms: Date.now() - start,
-      provider_used: response.packages.length > 0 ? "registry" : response.web[0]?.source ?? "dev-search",
+      provider_used: debug ? internalSource : publicMetaForCapability("search"),
       cache_hit: false,
       fallback_used: false,
+      ...(debug ? { _debug: { internal_provider: internalSource } } : {}),
     },
   };
 }

@@ -9,6 +9,7 @@ import { kv } from "../storage/kv";
 import { logger } from "../utils/logger";
 import crypto from "../utils/crypto";
 import { searchSchema, validateArgs } from "../mcp/validation";
+import { publicMetaForCapability, publicMetaProvider, publicErrorMessage, isDebugMode } from "../utils/provider-abstraction";
 
 export async function handleSearch(
   args: Record<string, unknown>,
@@ -172,29 +173,39 @@ export async function handleSearch(
     await kv.put("CACHE", cacheKey, finalResponse, { expirationTtl: 900 });
 
     const latency = Date.now() - startTime;
+    const debug = isDebugMode(auth);
     return {
       content: [{ type: "text", text: finalResponse }],
       meta: {
         latency_ms: latency,
         total_duration_ms: latency,
-        provider_used: providerUsed,
+        provider_used: debug ? providerUsed : publicMetaForCapability("search"),
         cache_hit: cacheHit,
-        fallback_used: fallbackUsed,
+        // Always emit fallback_used for telemetry contract — value is meaningful
+        // only in debug mode. Non-debug consumers see a stable false.
+        fallback_used: debug ? fallbackUsed : false,
+        ...(debug ? { _debug: { internal_provider: providerUsed } } : {}),
       },
     };
   } catch (err) {
+    // Log the original error with provider details for telemetry. Never expose.
     logger.error("IntelliSearch failed", {
       agent_id: auth.agent_id,
       error: err instanceof Error ? err.message : "Unknown",
     });
+
+    const debug = isDebugMode(auth);
+    const publicErr = publicErrorMessage(err, { capability: "search", debug });
 
     return {
       content: [
         {
           type: "text",
           text: JSON.stringify({
-            error: "Search failed",
-            message: err instanceof Error ? err.message : "Unknown error",
+            error: publicErr.code,
+            message: publicErr.message,
+            ...(publicErr.retry_hint ? { retry_hint: publicErr.retry_hint } : {}),
+            ...(debug && err instanceof Error ? { _debug: { raw: err.message } } : {}),
           }),
         },
       ],
@@ -202,9 +213,10 @@ export async function handleSearch(
       meta: {
         latency_ms: Date.now() - startTime,
         total_duration_ms: Date.now() - startTime,
-        provider_used: providerUsed,
+        provider_used: debug ? providerUsed : publicMetaForCapability("search"),
         cache_hit: cacheHit,
-        fallback_used: fallbackUsed,
+        fallback_used: debug ? fallbackUsed : false,
+        ...(debug ? { _debug: { internal_provider: providerUsed } } : {}),
       },
     };
   }

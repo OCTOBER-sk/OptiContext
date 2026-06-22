@@ -6,6 +6,7 @@ import { r2 } from "../storage/r2";
 import { logger } from "../utils/logger";
 import crypto from "../utils/crypto";
 import { ttsSchema, validateArgs } from "../mcp/validation";
+import { publicMetaForCapability, publicErrorMessage, isDebugMode } from "../utils/provider-abstraction";
 
 const UNREAL_SPEECH_API = "https://api.v7.unrealspeech.com/stream";
 
@@ -220,14 +221,17 @@ export async function handleTTS(
     }
     if (notes.length) responsePayload.note = notes.join("; ");
 
+    const internalProvider = segments.some((s) => s.audioBuffer) ? "unrealspeech" : "mock";
+    const debug = isDebugMode(auth);
     return {
       content: [{ type: "text", text: JSON.stringify(responsePayload) }],
       meta: {
         latency_ms: Date.now() - startTime,
         total_duration_ms: Date.now() - startTime,
-        provider_used: segments.some((s) => s.audioBuffer) ? "unrealspeech" : "mock",
+        provider_used: debug ? internalProvider : publicMetaForCapability("tts"),
         cache_hit: allCached,
         fallback_used: false,
+        ...(debug ? { _debug: { internal_provider: internalProvider } } : {}),
       },
     };
   } catch (err) {
@@ -236,17 +240,29 @@ export async function handleTTS(
       error: err instanceof Error ? err.message : "Unknown",
     });
 
+    const debug = isDebugMode(auth);
+    const publicErr = publicErrorMessage(err, { capability: "tts", debug });
+
     return {
       content: [
-        { type: "text", text: JSON.stringify({ error: "TTS failed", message: err instanceof Error ? err.message : "Unknown error" }) },
+        {
+          type: "text",
+          text: JSON.stringify({
+            error: publicErr.code,
+            message: publicErr.message,
+            ...(publicErr.retry_hint ? { retry_hint: publicErr.retry_hint } : {}),
+            ...(debug && err instanceof Error ? { _debug: { raw: err.message } } : {}),
+          }),
+        },
       ],
       isError: true,
       meta: {
         latency_ms: Date.now() - startTime,
         total_duration_ms: Date.now() - startTime,
-        provider_used: "unrealspeech",
+        provider_used: debug ? "unrealspeech" : publicMetaForCapability("tts"),
         cache_hit: false,
         fallback_used: false,
+        ...(debug ? { _debug: { internal_provider: "unrealspeech" } } : {}),
       },
     };
   }

@@ -67,7 +67,7 @@ export interface WebResult {
   score: number;
   /** Multiplier applied by domain-priority. */
   priority: number;
-  source: "tavily" | "ddg";
+  source: "search";
 }
 
 /**
@@ -223,7 +223,7 @@ async function runWebAdapter(
         content: r.content,
         score: r.score,
         priority: boostScore(r.url),
-        source: "tavily" as const,
+        source: "search" as const,
       }));
     }
   } catch {
@@ -239,7 +239,7 @@ async function runWebAdapter(
         content: r.snippet,
         score: 0.5,
         priority: boostScore(r.url),
-        source: "ddg" as const,
+        source: "search" as const,
       }));
     }
   } catch {

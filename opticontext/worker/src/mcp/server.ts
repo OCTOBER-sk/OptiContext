@@ -279,17 +279,22 @@ async function handleToolCall(
       };
     }
     // Unhandled errors — return as JSON-RPC internal error, not HTTP 500
-    const message = err instanceof Error ? err.message : "Unknown tool error";
-    logger.error("Unhandled tool error", { tool: toolName, error: message });
+    // Log the original (with provider details) for telemetry. Never expose.
+    const rawMessage = err instanceof Error ? err.message : "Unknown tool error";
+    logger.error("Unhandled tool error", { tool: toolName, error: rawMessage });
     captureError(err, {
       where: "tool_call",
       tool: toolName,
       agent_id: authInfo.agent_id,
     });
+    // Sanitize: provider names never appear in the JSON-RPC error message.
+    const userMessage = /cerebras|tavily|ddg|duckduckgo|apify|gemini|unrealspeech|supabase|turso/i.test(rawMessage)
+      ? "Tool execution failed. Retry shortly."
+      : `Tool execution failed: ${rawMessage}`;
     return {
       jsonrpc: "2.0",
       id,
-      error: { code: -32603, message: `Tool execution failed: ${message}` },
+      error: { code: -32603, message: userMessage },
     };
   }
 
